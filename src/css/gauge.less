@@ -1,0 +1,40 @@
+.gauge {
+	display: inline-block;
+	white-space: pre;
+	color: #eee;
+	text-shadow: 1px 1px 1px #333;
+	line-height: 1.5;
+	margin-bottom: 0.5em;
+	
+	&.underflow {
+		color: #f33;
+	}
+
+	span {
+		display: inline-block;
+	}
+
+	.empty {
+		background-color: rgba(@gray, @gray, @gray, 1);
+	}
+
+	.up, .down {
+		-webkit-animation: bg 1.5s infinite linear;
+		animation: bg 1.5s infinite linear;
+	}
+
+	.down {
+		-webkit-animation-direction: reverse;
+		animation-direction: reverse;
+	}
+}
+
+@keyframes bg {
+    from { background-color: rgba(@gray, @gray, @gray, 1); }
+    to   { background-color: rgba(@gray, @gray, @gray, 0); }
+}
+
+@-webkit-keyframes bg {
+    from { background-color: rgba(@gray, @gray, @gray, 1); }
+    to   { background-color: rgba(@gray, @gray, @gray, 0); }
+}

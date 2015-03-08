@@ -1,0 +1,88 @@
+/*
+			margin: 0 1em;
+			padding: 0 0.5em;
+*/
+
+.cell {
+	position: absolute;
+
+	.info {
+		position: relative;
+		
+		.label {
+			text-align: center;
+			background-color: @bg;
+			padding-bottom: 0.5em;
+
+			span {
+				&::before {
+					content: "   ---=<( ";
+					color: goldenrod;
+				}
+
+				&::after {
+					content: " )>=---   ";
+					color: goldenrod;
+				}
+			}
+		}
+
+		.attacks {
+			background-color: @bg;
+			counter-reset: attack;
+			float: left;
+			margin-left: 4ch;
+			width: 25ch;
+			
+			ul {
+				margin: 0;
+				padding: 0;
+				list-style: none;
+				line-height: 1.2;
+
+				li {
+					counter-increment: attack;
+					&::before {
+						color: #fff;
+						content: counter(attack) ". ";
+					}
+					
+					&.disabled {
+						opacity: 0.5;
+					}
+				}
+			}
+
+			.confirm {
+				margin-top: 1em;
+				text-align: center;
+
+				span {
+					color: #fff;
+				}
+				
+				&::before {
+					content: "✔";
+					display: block;
+					font-size: 2rem;
+					color: #0f0;
+				}
+				
+				&.disabled::before {
+					content: "✘";
+					color: #f00;
+				}
+			}
+		}
+
+		.gauges {
+			float: left;
+			background-color: @bg;
+			
+			.group {
+				display: inline-block;
+				width: 32ch;
+			}
+		}
+	}
+}

@@ -1,0 +1,147 @@
+@import url(http://fonts.googleapis.com/css?family=Inconsolata);
+.level {
+  position: absolute;
+  transition: 500ms;
+}
+.level .intro {
+  margin: 4rem 8rem 0;
+  padding: 2rem;
+  background-color: #000000;
+}
+/*
+			margin: 0 1em;
+			padding: 0 0.5em;
+*/
+.cell {
+  position: absolute;
+}
+.cell .info {
+  position: relative;
+}
+.cell .info .label {
+  text-align: center;
+  background-color: #000000;
+  padding-bottom: 0.5em;
+}
+.cell .info .label span::before {
+  content: "   ---=<( ";
+  color: goldenrod;
+}
+.cell .info .label span::after {
+  content: " )>=---   ";
+  color: goldenrod;
+}
+.cell .info .attacks {
+  background-color: #000000;
+  counter-reset: attack;
+  float: left;
+  margin-left: 4ch;
+  width: 25ch;
+}
+.cell .info .attacks ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  line-height: 1.2;
+}
+.cell .info .attacks ul li {
+  counter-increment: attack;
+}
+.cell .info .attacks ul li::before {
+  color: #fff;
+  content: counter(attack) ". ";
+}
+.cell .info .attacks ul li.disabled {
+  opacity: 0.5;
+}
+.cell .info .attacks .confirm {
+  margin-top: 1em;
+  text-align: center;
+}
+.cell .info .attacks .confirm span {
+  color: #fff;
+}
+.cell .info .attacks .confirm::before {
+  content: "✔";
+  display: block;
+  font-size: 2rem;
+  color: #0f0;
+}
+.cell .info .attacks .confirm.disabled::before {
+  content: "✘";
+  color: #f00;
+}
+.cell .info .gauges {
+  float: left;
+  background-color: #000000;
+}
+.cell .info .gauges .group {
+  display: inline-block;
+  width: 32ch;
+}
+.entity {
+  text-align: center;
+  padding-top: 2rem;
+}
+.entity span {
+  font-size: 12rem;
+  font-weight: bold;
+  background-color: #000000;
+  display: inline-block;
+  border-radius: 0.3em 0.3em 0 0;
+  padding: 1rem;
+}
+.gauge {
+  display: inline-block;
+  white-space: pre;
+  color: #eee;
+  text-shadow: 1px 1px 1px #333;
+  line-height: 1.5;
+  margin-bottom: 0.5em;
+}
+.gauge.underflow {
+  color: #f33;
+}
+.gauge span {
+  display: inline-block;
+}
+.gauge .empty {
+  background-color: #323232;
+}
+.gauge .up,
+.gauge .down {
+  -webkit-animation: bg 1.5s infinite linear;
+  animation: bg 1.5s infinite linear;
+}
+.gauge .down {
+  -webkit-animation-direction: reverse;
+  animation-direction: reverse;
+}
+@keyframes bg {
+  from {
+    background-color: #323232;
+  }
+  to {
+    background-color: rgba(50, 50, 50, 0);
+  }
+}
+@-webkit-keyframes bg {
+  from {
+    background-color: #323232;
+  }
+  to {
+    background-color: rgba(50, 50, 50, 0);
+  }
+}
+* {
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background-color: #000;
+  font-family: inconsolata;
+  overflow: hidden;
+  color: #ccc;
+}
