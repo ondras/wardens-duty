@@ -1,4 +1,5 @@
-var Level = function() {
+var Level = function(depth) {
+	this._depth = depth;
 	this._size = [2, 3];
 	this._cells = [];
 	this._current = [-1, -1];
@@ -48,15 +49,19 @@ Level.prototype = {
 		this._dom.node.parentNode.removeChild(this._dom.node);
 		this._cells.forEach(cell => cell.deactivate());
 	},
+	
+	getDepth() {
+		return this._depth;
+	},
 
 	checkCells() {
-		var doable = this._cell.some(cell => cell.isDoable());
-		var done = this._cell.some(cell => cell.isDone());
+		var doable = this._cells.some(cell => cell.isDoable());
+		var done = this._cells.some(cell => cell.isDone());
 
 		if (done) { /* level done, switch to another */
-
+			game.nextLevel();
 		} else if (!doable) { /* game over */
-
+			game.over();
 		}
 	},
 

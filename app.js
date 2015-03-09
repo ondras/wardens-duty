@@ -419,7 +419,7 @@ Being.prototype.computeOutcome = function (attack) {
 "use strict";
 
 var Level = (function (_Level) {
-	var _LevelWrapper = function Level() {
+	var _LevelWrapper = function Level(_x) {
 		return _Level.apply(this, arguments);
 	};
 
@@ -428,7 +428,8 @@ var Level = (function (_Level) {
 	};
 
 	return _LevelWrapper;
-})(function () {
+})(function (depth) {
+	this._depth = depth;
 	this._size = [2, 3];
 	this._cells = [];
 	this._current = [-1, -1];
@@ -483,15 +484,25 @@ Level.prototype = {
 		});
 	},
 
+	getDepth: function getDepth() {
+		return this._depth;
+	},
+
 	checkCells: function checkCells() {
-		var doable = this._cell.some(function (cell) {
+		var doable = this._cells.some(function (cell) {
 			return cell.isDoable();
 		});
-		var done = this._cell.some(function (cell) {
+		var done = this._cells.some(function (cell) {
 			return cell.isDone();
 		});
 
-		if (done) {} else if (!doable) {}
+		if (done) {
+			/* level done, switch to another */
+			game.nextLevel();
+		} else if (!doable) {
+			/* game over */
+			game.over();
+		}
 	},
 
 	handleEvent: function handleEvent(e) {
@@ -670,9 +681,6 @@ Level.prototype = {
 		node.style.top = top + "px";
 	}
 };
-/* level done, switch to another */
-
-/* game over */
 "use strict";
 
 var PC = function PC() {
@@ -792,7 +800,71 @@ Gauge.prototype = {
 };
 "use strict";
 
-var pc = new PC();
+var Game = function Game() {
+	this._dom = {
+		intro: document.createElement("div"),
+		outro: document.createElement("div")
+	};
+	this._level = null;
 
-var level = new Level();
-level.activate();
+	this._start();
+};
+
+Game.prototype = {
+	nextLevel: function nextLevel() {
+		var depth = this._level ? this._level.getDepth() : 0;
+		depth++;
+
+		this._level && this._level.deactivate();
+		this._level = new Level(depth);
+		this._level.activate();
+	},
+
+	over: function over() {
+		window.addEventListener("keydown", this);
+
+		var node = this._dom.outro;
+		node.id = "outro";
+		node.innerHTML = "Game over jak cyp";
+		/* FIXME outro */
+		node.classList.add("transparent");
+		document.body.appendChild(node);
+
+		setTimeout(function () {
+			node.classList.remove("transparent");
+		}, 0);
+	},
+
+	handleEvent: function handleEvent(e) {
+		var _this = this;
+
+		if (e.keyCode != 13) {
+			return;
+		}
+
+		window.removeEventListener("keydown", this);
+
+		if (this._level.getDepth() > 1) {
+			location.reload();
+		} else {
+			this._dom.intro.classList.add("transparent");
+			setTimeout(function () {
+				_this._dom.intro.parentNode.removeChild(_this._dom.intro);
+			}, 2000);
+		}
+	},
+
+	_start: function _start() {
+		this.nextLevel();
+		var node = this._dom.intro;
+		node.id = "intro";
+
+		node.innerHTML = "<h1>Warden's Duty</h1>\n\t\t<p>The game you are about to play blah blah blah </p>\n\t\t";
+		document.body.appendChild(node);
+
+		window.addEventListener("keydown", this);
+	}
+};
+
+var pc = new PC();
+var game = new Game();
