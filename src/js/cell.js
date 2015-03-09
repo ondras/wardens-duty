@@ -1,4 +1,4 @@
-var Cell = function(entity) {
+var Cell = function(level, entity) {
 	this._entity = entity;
 	this._current = 0;
 	this._done = false;

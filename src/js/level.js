@@ -11,7 +11,7 @@ var Level = function() {
 	var count = this._size[0]*(this._size[1]-1);
 	for (var i=0;i<count;i++) {
 		var being = new Being();
-		var cell = new Cell(being);
+		var cell = new Cell(this, being);
 		this._cells.push(cell);
 	}
 
@@ -19,6 +19,7 @@ var Level = function() {
 
 	this._build();
 	this._resize();
+	this.checkCells();
 }
 
 Level.data = {
@@ -46,6 +47,17 @@ Level.prototype = {
 
 		this._dom.node.parentNode.removeChild(this._dom.node);
 		this._cells.forEach(cell => cell.deactivate());
+	},
+
+	checkCells() {
+		var doable = this._cell.some(cell => cell.isDoable());
+		var done = this._cell.some(cell => cell.isDone());
+
+		if (done) { /* level done, switch to another */
+
+		} else if (!doable) { /* game over */
+
+		}
 	},
 
 	handleEvent(e) {

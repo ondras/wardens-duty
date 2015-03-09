@@ -71,7 +71,7 @@ Object.keys(Elements).forEach(function (key) {
 });
 "use strict";
 
-var Cell = function Cell(entity) {
+var Cell = function Cell(level, entity) {
 	this._entity = entity;
 	this._current = 0;
 	this._done = false;
@@ -441,7 +441,7 @@ var Level = (function (_Level) {
 	var count = this._size[0] * (this._size[1] - 1);
 	for (var i = 0; i < count; i++) {
 		var being = new Being();
-		var cell = new Cell(being);
+		var cell = new Cell(this, being);
 		this._cells.push(cell);
 	}
 
@@ -451,6 +451,7 @@ var Level = (function (_Level) {
 
 	this._build();
 	this._resize();
+	this.checkCells();
 });
 
 Level.data = {
@@ -480,6 +481,17 @@ Level.prototype = {
 		this._cells.forEach(function (cell) {
 			return cell.deactivate();
 		});
+	},
+
+	checkCells: function checkCells() {
+		var doable = this._cell.some(function (cell) {
+			return cell.isDoable();
+		});
+		var done = this._cell.some(function (cell) {
+			return cell.isDone();
+		});
+
+		if (done) {} else if (!doable) {}
 	},
 
 	handleEvent: function handleEvent(e) {
@@ -658,6 +670,9 @@ Level.prototype = {
 		node.style.top = top + "px";
 	}
 };
+/* level done, switch to another */
+
+/* game over */
 "use strict";
 
 var PC = function PC() {
