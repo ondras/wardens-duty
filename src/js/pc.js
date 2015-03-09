@@ -7,5 +7,8 @@ var PC = function() {
 
 PC.prototype = {
 	getStats() { return this._stats; },
-	getAttacks() { return this._attacks; }
+	getAttacks() { return this._attacks; },
+	setStat(stat, value) {
+		this._stats[stat] = value; 
+	}
 }

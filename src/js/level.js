@@ -1,6 +1,6 @@
 var Level = function(depth) {
 	this._depth = depth;
-	this._size = [2, 3];
+	this._size = [2, 2];
 	this._cells = [];
 	this._current = [-1, -1];
 
@@ -56,7 +56,7 @@ Level.prototype = {
 
 	checkCells() {
 		var doable = this._cells.some(cell => cell.isDoable());
-		var done = this._cells.some(cell => cell.isDone());
+		var done = this._cells.every(cell => cell.isDone());
 
 		if (done) { /* level done, switch to another */
 			game.nextLevel();

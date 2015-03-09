@@ -21,20 +21,6 @@ Being.prototype.getAttacks = function(pc) {
 		id: "magic",
 		label: "Magic missile"
 	});
-
-	results.push({
-		id: "magic",
-		label: "Magic missile"
-	});
-	results.push({
-		id: "magic",
-		label: "Magic missile"
-	});
-	results.push({
-		id: "magic",
-		label: "Magic missile"
-	});
-	
 	return results;
 }
 
@@ -45,7 +31,7 @@ Being.prototype.computeOutcome = function(attack) {
 
 	switch (attack) {
 		case "melee":
-			outcome["hp"] = -150;
+			outcome["hp"] = -50;
 		break;
 
 		case "ranged":

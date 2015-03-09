@@ -46,7 +46,7 @@ var Stats = {
 	"xp": {
 		label: "Experience",
 		color: "#a3a",
-		def: 0
+		def: 5
 	}
 }
 

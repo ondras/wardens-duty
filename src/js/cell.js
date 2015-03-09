@@ -1,4 +1,5 @@
 var Cell = function(level, entity) {
+	this._level = level;
 	this._entity = entity;
 	this._current = 0;
 	this._done = false;
@@ -14,7 +15,6 @@ var Cell = function(level, entity) {
 
 	this._attacks = this._entity.getAttacks();
 	this._build();
-	this._switchAttack(0);
 }
 
 Cell.prototype = {
@@ -210,6 +210,7 @@ Cell.prototype = {
 		});
 		
 		this._syncConfirm();
+		this._switchAttack(this._current);
 	},
 	
 	_syncConfirm() {

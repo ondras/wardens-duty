@@ -18,5 +18,11 @@ Entity.prototype = {
 
 	doAttack(attack) {
 		var outcome = this.computeOutcome(attack);
+		var stats = pc.getStats();
+		
+		for (var p in outcome) {
+			stats[p] += outcome[p];
+			/* FIXME xp */
+		}
 	}
 }

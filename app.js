@@ -40,7 +40,7 @@ var Stats = {
 	xp: {
 		label: "Experience",
 		color: "#a3a",
-		def: 0
+		def: 5
 	}
 };
 
@@ -72,6 +72,7 @@ Object.keys(Elements).forEach(function (key) {
 "use strict";
 
 var Cell = function Cell(level, entity) {
+	this._level = level;
 	this._entity = entity;
 	this._current = 0;
 	this._done = false;
@@ -87,7 +88,6 @@ var Cell = function Cell(level, entity) {
 
 	this._attacks = this._entity.getAttacks();
 	this._build();
-	this._switchAttack(0);
 };
 
 Cell.prototype = {
@@ -306,6 +306,7 @@ Cell.prototype = {
 		});
 
 		this._syncConfirm();
+		this._switchAttack(this._current);
 	},
 
 	_syncConfirm: function _syncConfirm() {
@@ -351,6 +352,12 @@ Entity.prototype = {
 
 	doAttack: function doAttack(attack) {
 		var outcome = this.computeOutcome(attack);
+		var stats = pc.getStats();
+
+		for (var p in outcome) {
+			stats[p] += outcome[p];
+			/* FIXME xp */
+		}
 	}
 };
 "use strict";
@@ -378,20 +385,6 @@ Being.prototype.getAttacks = function (pc) {
 		id: "magic",
 		label: "Magic missile"
 	});
-
-	results.push({
-		id: "magic",
-		label: "Magic missile"
-	});
-	results.push({
-		id: "magic",
-		label: "Magic missile"
-	});
-	results.push({
-		id: "magic",
-		label: "Magic missile"
-	});
-
 	return results;
 };
 
@@ -402,7 +395,7 @@ Being.prototype.computeOutcome = function (attack) {
 
 	switch (attack) {
 		case "melee":
-			outcome.hp = -150;
+			outcome.hp = -50;
 			break;
 
 		case "ranged":
@@ -430,7 +423,7 @@ var Level = (function (_Level) {
 	return _LevelWrapper;
 })(function (depth) {
 	this._depth = depth;
-	this._size = [2, 3];
+	this._size = [2, 2];
 	this._cells = [];
 	this._current = [-1, -1];
 
@@ -492,7 +485,7 @@ Level.prototype = {
 		var doable = this._cells.some(function (cell) {
 			return cell.isDoable();
 		});
-		var done = this._cells.some(function (cell) {
+		var done = this._cells.every(function (cell) {
 			return cell.isDone();
 		});
 
@@ -698,6 +691,9 @@ PC.prototype = {
 	},
 	getAttacks: function getAttacks() {
 		return this._attacks;
+	},
+	setStat: function setStat(stat, value) {
+		this._stats[stat] = value;
 	}
 };
 "use strict";

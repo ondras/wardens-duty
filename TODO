@@ -20,3 +20,7 @@
   - variable textures
   - lighting
   - nav arrows
+
+- bugs
+  - movement allowed during intro
+  - end detection lame?

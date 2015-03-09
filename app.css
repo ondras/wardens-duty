@@ -8,10 +8,6 @@
   padding: 2rem;
   background-color: #000000;
 }
-/*
-			margin: 0 1em;
-			padding: 0 0.5em;
-*/
 .cell {
   position: absolute;
 }
@@ -164,6 +160,10 @@ body {
 #intro {
   background-color: #fff;
   color: #000;
+  padding: 1em;
+}
+#intro h1 {
+  text-align: center;
 }
 #outro {
   background-color: #000;
