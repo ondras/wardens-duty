@@ -67,7 +67,7 @@ var Elements = {
 	}
 }
 
-Object.keys(Elements).forEach((key) => {
+Object.keys(Elements).forEach(key => {
 	Stats[`res-${key}`] = {
 		label: `${Elements[key].label} resistance`,
 		def: 0

@@ -74,6 +74,7 @@ Object.keys(Elements).forEach(function (key) {
 var Cell = function Cell(entity) {
 	this._entity = entity;
 	this._current = 0;
+	this._done = false;
 
 	this._dom = {
 		node: document.createElement("div"),
@@ -94,7 +95,9 @@ Cell.prototype = {
 		window.addEventListener("keypress", this);
 		window.addEventListener("keydown", this);
 
-		this._syncAttacks();
+		if (!this._done) {
+			this._syncAttacks();
+		}
 	},
 
 	deactivate: function deactivate() {
@@ -111,7 +114,23 @@ Cell.prototype = {
 		this._dom.node.style.height = h + "px";
 	},
 
+	isDone: function isDone() {
+		return this._done;
+	},
+
+	isDoable: function isDoable() {
+		return this._attacks.some(function (attack) {
+			return !attack.disabled;
+		});
+	},
+
 	handleEvent: function handleEvent(e) {
+		if (this._done) {
+			/* done confirmation */
+			this._finalize();
+			return;
+		}
+
 		switch (e.type) {
 			case "keydown":
 				if (e.keyCode != 13) {
@@ -208,6 +227,8 @@ Cell.prototype = {
 		this._dom.attacks.appendChild(ul);
 		this._dom.attacks.appendChild(this._dom.confirm);
 		this._dom.info.appendChild(this._dom.attacks);
+
+		this._syncAttacks();
 	},
 
 	_buildGauge: function _buildGauge(node, stats, outcome, type) {
@@ -259,8 +280,21 @@ Cell.prototype = {
 	},
 
 	_doAttack: function _doAttack() {
+		this._dom.entity.querySelector("span").style.color = "#000";
+
 		var id = this._attacks[this._current].id;
 		var result = this._entity.doAttack(id);
+
+		this._done = true;
+
+		if (result) {
+			/* we need to show this text and wait for a confirmation */
+			/* FIXME show result */
+			this._dom.info.innerHTML = result;
+		} else {
+			/* pass control back to level */
+			this._finalize();
+		}
 	},
 
 	_syncAttacks: function _syncAttacks() {
@@ -285,6 +319,12 @@ Cell.prototype = {
 			node.classList.remove("disabled");
 			node.innerHTML = "<span>Enter</span> to confirm";
 		}
+	},
+
+	_finalize: function _finalize() {
+		this._dom.info.innerHTML = "";
+		this.deactivate();
+		this._level.checkCells();
 	}
 };
 "use strict";

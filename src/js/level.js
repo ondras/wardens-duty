@@ -45,7 +45,7 @@ Level.prototype = {
 		window.removeEventListener("resize", this);
 
 		this._dom.node.parentNode.removeChild(this._dom.node);
-		this._cells.forEach((cell) => cell.deactivate());
+		this._cells.forEach(cell => cell.deactivate());
 	},
 
 	handleEvent(e) {
@@ -119,7 +119,7 @@ Level.prototype = {
 		intro.innerHTML = "This is intro pico";
 		this._dom.intro.appendChild(intro);
 
-		this._cells.forEach((cell) => this._dom.node.appendChild(cell.getNode()));
+		this._cells.forEach(cell => this._dom.node.appendChild(cell.getNode()));
 	},
 
 	_createTextureData() {
