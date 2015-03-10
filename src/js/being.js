@@ -21,6 +21,7 @@ Being.prototype.getAttacks = function(pc) {
 		id: "magic",
 		label: "Magic missile"
 	});
+
 	return results;
 }
 

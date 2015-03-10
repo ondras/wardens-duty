@@ -10,67 +10,71 @@
 }
 .cell {
   position: absolute;
+  overflow: hidden;
 }
 .cell .info {
   position: relative;
+  height: 50%;
+  background-color: #000000;
+  /* .attacks */
 }
 .cell .info .label {
   text-align: center;
-  background-color: #000000;
   padding-bottom: 0.5em;
 }
 .cell .info .label span::before {
-  /* -=≡≣ STUFF ≣≡=- */
-  content: "   ---=<( ";
+  content: "---=<( ";
   color: goldenrod;
 }
 .cell .info .label span::after {
-  content: " )>=---   ";
+  content: " )>=---";
   color: goldenrod;
 }
 .cell .info .attacks {
-  background-color: #000000;
   counter-reset: attack;
   float: left;
-  margin-left: 4ch;
-  width: 25ch;
+  margin-left: 2ch;
+  width: 28ch;
+  /* ul */
 }
 .cell .info .attacks ul {
   margin: 0;
   padding: 0;
   list-style: none;
   line-height: 1.2;
+  /* li */
 }
 .cell .info .attacks ul li {
   counter-increment: attack;
+  /* confirm */
 }
 .cell .info .attacks ul li::before {
   color: #fff;
-  content: counter(attack) ". ";
+  content: "[" counter(attack) "] ";
 }
 .cell .info .attacks ul li.disabled {
   opacity: 0.5;
 }
-.cell .info .attacks .confirm {
-  margin-top: 1em;
-  text-align: center;
+.cell .info .attacks ul li.active {
+  background-color: #333;
 }
-.cell .info .attacks .confirm span {
+.cell .info .attacks ul li .confirm {
+  margin-left: 4ch;
+  margin-bottom: 0.5em;
+}
+.cell .info .attacks ul li .confirm span {
   color: #fff;
 }
-.cell .info .attacks .confirm::before {
-  content: "✔";
-  display: block;
-  font-size: 2rem;
+.cell .info .attacks ul li .confirm::before {
+  content: "✔ ";
   color: #0f0;
 }
-.cell .info .attacks .confirm.disabled::before {
-  content: "✘";
+.cell .info .attacks ul li .confirm.disabled::before {
+  content: "✘ ";
   color: #f00;
 }
 .cell .info .gauges {
   float: left;
-  background-color: #000000;
 }
 .cell .info .gauges .group {
   display: inline-block;

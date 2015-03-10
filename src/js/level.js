@@ -1,5 +1,8 @@
 var Level = function(depth) {
 	this._depth = depth;
+
+//	this._size = Generator.getSize(depth);
+	//this._size[1]++; // room for the intro cell
 	this._size = [2, 2];
 	this._cells = [];
 	this._current = null;
@@ -33,8 +36,8 @@ Level.prototype = {
 		window.addEventListener("keypress", this);
 		window.addEventListener("keydown", this);
 
-		this.resize(w, h);
 		this._activateCell(0, 0);
+		this.resize(w, h);
 		document.body.appendChild(this._dom.node);
 	},
 
@@ -51,7 +54,8 @@ Level.prototype = {
 	},
 
 	checkCells() {
-		var doable = this._cells.some(cell => cell.isDoable());
+		this._cells.forEach(cell => cell.syncAttacks());
+		var doable = this._cells.some(cell => cell.isDoable() && !cell.isDone());
 		var done = this._cells.every(cell => cell.isDone());
 
 		if (done) { /* level done, switch to another */
@@ -89,23 +93,22 @@ Level.prototype = {
 		var what = (e.type == "keydown" ? e.keyCode : String.fromCharCode(e.charCode));
 
 		switch (what) {
-			/* FIXME rot constants? */
-			case 37:
+			case ROT.VK_LEFT:
 			case "a":
 			case "h":
 				this._activateCell(this._current[0]-1, this._current[1]);
 			break;
-			case 38:
+			case ROT.VK_UP:
 			case "w":
 			case "k":
 				this._activateCell(this._current[0], this._current[1]-1);
 			break;
-			case 39:
+			case ROT.VK_RIGHT:
 			case "d":
 			case "l":
 				this._activateCell(this._current[0]+1, this._current[1]);
 			break;
-			case 40:
+			case ROT.VK_DOWN:
 			case "s":
 			case "j":
 				this._activateCell(this._current[0], this._current[1]+1);
@@ -123,7 +126,7 @@ Level.prototype = {
 
 		if (this._current) {
 			var index = this._current[0] + (this._current[1]-1)*this._size[0];
-			this._cells[index].deactivate();
+			if (index >= 0) { this._cells[index].deactivate(); }
 		}
 
 		this._current = [x, y];

@@ -1,34 +1,34 @@
 .cell {
 	position: absolute;
+	overflow: hidden;
 
 	.info {
 		position: relative;
+		height: 50%;
+		background-color: @bg;
 		
 		.label {
 			text-align: center;
-			background-color: @bg;
 			padding-bottom: 0.5em;
 
 			span {
 				&::before {
-				/* -=≡≣ STUFF ≣≡=- */
-					content: "   ---=<( ";
+					content: "---=<( ";
 					color: goldenrod;
 				}
 
 				&::after {
-					content: " )>=---   ";
+					content: " )>=---";
 					color: goldenrod;
 				}
 			}
 		}
 
 		.attacks {
-			background-color: @bg;
 			counter-reset: attack;
 			float: left;
-			margin-left: 4ch;
-			width: 25ch;
+			margin-left: 2ch;
+			width: 28ch;
 			
 			ul {
 				margin: 0;
@@ -40,40 +40,41 @@
 					counter-increment: attack;
 					&::before {
 						color: #fff;
-						content: counter(attack) ". ";
+						content: "[" counter(attack) "] ";
 					}
 					
 					&.disabled {
 						opacity: 0.5;
 					}
-				}
-			}
+					
+					&.active {
+						background-color: #333;
+					}
 
-			.confirm {
-				margin-top: 1em;
-				text-align: center;
+					.confirm {
+						margin-left: 4ch;
+						margin-bottom: 0.5em;
 
-				span {
-					color: #fff;
-				}
-				
-				&::before {
-					content: "✔";
-					display: block;
-					font-size: 2rem;
-					color: #0f0;
-				}
-				
-				&.disabled::before {
-					content: "✘";
-					color: #f00;
-				}
-			}
-		}
+						span {
+							color: #fff;
+						}
+						
+						&::before {
+							content: "✔ ";
+							color: #0f0;
+						}
+						
+						&.disabled::before {
+							content: "✘ ";
+							color: #f00;
+						}
+					} /* confirm */
+				} /* li */
+			} /* ul */
+		} /* .attacks */
 
 		.gauges {
 			float: left;
-			background-color: @bg;
 			
 			.group {
 				display: inline-block;

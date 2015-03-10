@@ -19,15 +19,13 @@ var Cell = function(level, entity) {
 
 Cell.prototype = {
 	activate() {
-		console.log("activate", this);
 		window.addEventListener("keypress", this);
 		window.addEventListener("keydown", this);
 		
-		if (!this._done) { this._syncAttacks(); }
+		if (!this._done) { this.syncAttacks(); }
 	},
 
 	deactivate() {
-		console.log("deactivate", this);
 		window.removeEventListener("keypress", this);
 		window.removeEventListener("keydown", this);
 	},
@@ -47,6 +45,15 @@ Cell.prototype = {
 
 	isDoable() {
 		return this._attacks.some(attack => !attack.disabled);
+	},
+
+	syncAttacks() {
+		this._attacks.forEach((attack, index) => {
+			attack.disabled = this._isAttackDisabled(attack.id);
+			attack.node.classList[attack.disabled ? "add" : "remove"]("disabled");
+		});
+		
+		this._switchAttack(this._current);
 	},
 
 	handleEvent(e) {
@@ -74,10 +81,15 @@ Cell.prototype = {
 	},
 
 	_switchAttack(attackIndex) {
+		this._attacks[this._current].node.classList.remove("active");
+		
 		this._current = attackIndex;
 		this._dom.gauges.innerHTML = "";
 
 		var attack = this._attacks[this._current];
+		attack.node.classList.add("active");
+		attack.node.appendChild(this._dom.confirm);
+
 		var outcome = this._entity.computeOutcome(attack.id);
 		var stats = pc.getStats();
 
@@ -145,8 +157,6 @@ Cell.prototype = {
 		this._dom.attacks.appendChild(ul);
 		this._dom.attacks.appendChild(this._dom.confirm);
 		this._dom.info.appendChild(this._dom.attacks);
-
-		this._syncAttacks();
 	},
 	
 	_buildGauge(node, stats, outcome, type) {
@@ -204,18 +214,9 @@ Cell.prototype = {
 			this._finalize();
 		}
 	},
-	
-	_syncAttacks() {
-		this._attacks.forEach((attack, index) => {
-			attack.disabled = this._isAttackDisabled(attack.id);
-			attack.node.classList[attack.disabled ? "add" : "remove"]("disabled");
-		});
 		
-		this._syncConfirm();
-		this._switchAttack(this._current);
-	},
-	
 	_syncConfirm() {
+		
 		var attack = this._attacks[this._current];
 		var node = this._dom.confirm;
 

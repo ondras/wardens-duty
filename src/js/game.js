@@ -29,7 +29,9 @@ Game.prototype = {
 		
 		var node = this._dom.outro;
 		node.id = "outro";
-		node.innerHTML = "Game over jak cyp";
+		node.innerHTML = `<h1>Game over</h1>
+			<p>jak cyp</p>
+		`;
 		/* FIXME outro */
 		node.classList.add("transparent");
 		document.body.appendChild(node);
@@ -79,7 +81,7 @@ Game.prototype = {
 		node.id = "intro";
 		
 		node.innerHTML = `<h1>Warden's Duty</h1>
-		<p>The game you are about to play blah blah blah </p>
+			<p>The game you are about to play blah blah blah </p>
 		`;
 		document.body.appendChild(node);
 		

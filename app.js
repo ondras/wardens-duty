@@ -92,17 +92,15 @@ var Cell = function Cell(level, entity) {
 
 Cell.prototype = {
 	activate: function activate() {
-		console.log("activate", this);
 		window.addEventListener("keypress", this);
 		window.addEventListener("keydown", this);
 
 		if (!this._done) {
-			this._syncAttacks();
+			this.syncAttacks();
 		}
 	},
 
 	deactivate: function deactivate() {
-		console.log("deactivate", this);
 		window.removeEventListener("keypress", this);
 		window.removeEventListener("keydown", this);
 	},
@@ -124,6 +122,17 @@ Cell.prototype = {
 		return this._attacks.some(function (attack) {
 			return !attack.disabled;
 		});
+	},
+
+	syncAttacks: function syncAttacks() {
+		var _this = this;
+
+		this._attacks.forEach(function (attack, index) {
+			attack.disabled = _this._isAttackDisabled(attack.id);
+			attack.node.classList[attack.disabled ? "add" : "remove"]("disabled");
+		});
+
+		this._switchAttack(this._current);
 	},
 
 	handleEvent: function handleEvent(e) {
@@ -158,10 +167,15 @@ Cell.prototype = {
 	},
 
 	_switchAttack: function _switchAttack(attackIndex) {
+		this._attacks[this._current].node.classList.remove("active");
+
 		this._current = attackIndex;
 		this._dom.gauges.innerHTML = "";
 
 		var attack = this._attacks[this._current];
+		attack.node.classList.add("active");
+		attack.node.appendChild(this._dom.confirm);
+
 		var outcome = this._entity.computeOutcome(attack.id);
 		var stats = pc.getStats();
 
@@ -229,8 +243,6 @@ Cell.prototype = {
 		this._dom.attacks.appendChild(ul);
 		this._dom.attacks.appendChild(this._dom.confirm);
 		this._dom.info.appendChild(this._dom.attacks);
-
-		this._syncAttacks();
 	},
 
 	_buildGauge: function _buildGauge(node, stats, outcome, type) {
@@ -299,19 +311,8 @@ Cell.prototype = {
 		}
 	},
 
-	_syncAttacks: function _syncAttacks() {
-		var _this = this;
-
-		this._attacks.forEach(function (attack, index) {
-			attack.disabled = _this._isAttackDisabled(attack.id);
-			attack.node.classList[attack.disabled ? "add" : "remove"]("disabled");
-		});
-
-		this._syncConfirm();
-		this._switchAttack(this._current);
-	},
-
 	_syncConfirm: function _syncConfirm() {
+
 		var attack = this._attacks[this._current];
 		var node = this._dom.confirm;
 
@@ -387,6 +388,7 @@ Being.prototype.getAttacks = function (pc) {
 		id: "magic",
 		label: "Magic missile"
 	});
+
 	return results;
 };
 
@@ -415,6 +417,9 @@ Being.prototype.computeOutcome = function (attack) {
 
 var Level = function Level(depth) {
 	this._depth = depth;
+
+	//	this._size = Generator.getSize(depth);
+	//this._size[1]++; // room for the intro cell
 	this._size = [2, 2];
 	this._cells = [];
 	this._current = null;
@@ -448,8 +453,8 @@ Level.prototype = {
 		window.addEventListener("keypress", this);
 		window.addEventListener("keydown", this);
 
-		this.resize(w, h);
 		this._activateCell(0, 0);
+		this.resize(w, h);
 		document.body.appendChild(this._dom.node);
 	},
 
@@ -468,8 +473,11 @@ Level.prototype = {
 	},
 
 	checkCells: function checkCells() {
+		this._cells.forEach(function (cell) {
+			return cell.syncAttacks();
+		});
 		var doable = this._cells.some(function (cell) {
-			return cell.isDoable();
+			return cell.isDoable() && !cell.isDone();
 		});
 		var done = this._cells.every(function (cell) {
 			return cell.isDone();
@@ -516,23 +524,22 @@ Level.prototype = {
 		var what = e.type == "keydown" ? e.keyCode : String.fromCharCode(e.charCode);
 
 		switch (what) {
-			/* FIXME rot constants? */
-			case 37:
+			case ROT.VK_LEFT:
 			case "a":
 			case "h":
 				this._activateCell(this._current[0] - 1, this._current[1]);
 				break;
-			case 38:
+			case ROT.VK_UP:
 			case "w":
 			case "k":
 				this._activateCell(this._current[0], this._current[1] - 1);
 				break;
-			case 39:
+			case ROT.VK_RIGHT:
 			case "d":
 			case "l":
 				this._activateCell(this._current[0] + 1, this._current[1]);
 				break;
-			case 40:
+			case ROT.VK_DOWN:
 			case "s":
 			case "j":
 				this._activateCell(this._current[0], this._current[1] + 1);
@@ -552,7 +559,9 @@ Level.prototype = {
 
 		if (this._current) {
 			var index = this._current[0] + (this._current[1] - 1) * this._size[0];
-			this._cells[index].deactivate();
+			if (index >= 0) {
+				this._cells[index].deactivate();
+			}
 		}
 
 		this._current = [x, y];
@@ -808,7 +817,7 @@ Game.prototype = {
 
 		var node = this._dom.outro;
 		node.id = "outro";
-		node.innerHTML = "Game over jak cyp";
+		node.innerHTML = "<h1>Game over</h1>\n\t\t\t<p>jak cyp</p>\n\t\t";
 		/* FIXME outro */
 		node.classList.add("transparent");
 		document.body.appendChild(node);
@@ -861,7 +870,7 @@ Game.prototype = {
 		var node = this._dom.intro;
 		node.id = "intro";
 
-		node.innerHTML = "<h1>Warden's Duty</h1>\n\t\t<p>The game you are about to play blah blah blah </p>\n\t\t";
+		node.innerHTML = "<h1>Warden's Duty</h1>\n\t\t\t<p>The game you are about to play blah blah blah </p>\n\t\t";
 		document.body.appendChild(node);
 
 		window.addEventListener("keydown", this);
