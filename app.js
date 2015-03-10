@@ -92,6 +92,7 @@ var Cell = function Cell(level, entity) {
 
 Cell.prototype = {
 	activate: function activate() {
+		console.log("activate", this);
 		window.addEventListener("keypress", this);
 		window.addEventListener("keydown", this);
 
@@ -101,6 +102,7 @@ Cell.prototype = {
 	},
 
 	deactivate: function deactivate() {
+		console.log("deactivate", this);
 		window.removeEventListener("keypress", this);
 		window.removeEventListener("keydown", this);
 	},
@@ -411,21 +413,13 @@ Being.prototype.computeOutcome = function (attack) {
 };
 "use strict";
 
-var Level = (function (_Level) {
-	var _LevelWrapper = function Level(_x) {
-		return _Level.apply(this, arguments);
-	};
-
-	_LevelWrapper.toString = function () {
-		return _Level.toString();
-	};
-
-	return _LevelWrapper;
-})(function (depth) {
+var Level = function Level(depth) {
 	this._depth = depth;
 	this._size = [2, 2];
 	this._cells = [];
-	this._current = [-1, -1];
+	this._current = null;
+
+	this._texture = [];
 
 	this._dom = {
 		node: document.createElement("div"),
@@ -439,37 +433,29 @@ var Level = (function (_Level) {
 		this._cells.push(cell);
 	}
 
-	if (!Level.data.random) {
-		this._createTextureData();
-	}
-
 	this._build();
-	this._resize();
 	this.checkCells();
-});
+};
 
 Level.data = {
 	fontSize: 24,
 	lineHeight: 1,
-	random: null,
-	fontFamily: "serif",
-	texture: ""
+	fontFamily: "serif"
 };
 
 Level.prototype = {
-	activate: function activate() {
+	activate: function activate(w, h) {
 		window.addEventListener("keypress", this);
 		window.addEventListener("keydown", this);
-		window.addEventListener("resize", this);
 
-		document.body.appendChild(this._dom.node);
+		this.resize(w, h);
 		this._activateCell(0, 0);
+		document.body.appendChild(this._dom.node);
 	},
 
 	deactivate: function deactivate() {
 		window.removeEventListener("keypress", this);
 		window.removeEventListener("keydown", this);
-		window.removeEventListener("resize", this);
 
 		this._dom.node.parentNode.removeChild(this._dom.node);
 		this._cells.forEach(function (cell) {
@@ -498,13 +484,32 @@ Level.prototype = {
 		}
 	},
 
-	handleEvent: function handleEvent(e) {
-		if (e.type == "resize") {
-			this._updateSizeData();
-			this._resize();
-			return;
-		}
+	resize: function resize(w, h) {
+		var _this = this;
 
+		var node = this._dom.node;
+		node.style.width = this._size[0] * w + "px";
+		node.style.height = this._size[1] * h + "px";
+
+		this._dom.intro.style.width = w + "px";
+		this._dom.intro.style.height = h + "px";
+
+		this._renderTexture();
+
+		this._cells.forEach(function (cell, index) {
+			var x = index % _this._size[0];
+			var y = Math.floor(index / _this._size[0]) + 1;
+
+			cell.resize(w, h);
+			var node = cell.getNode();
+			node.style.left = x * w + "px";
+			node.style.top = y * h + "px";
+		});
+
+		this._positionPort();
+	},
+
+	handleEvent: function handleEvent(e) {
 		if (e.ctrlKey || e.altKey || e.metaKey) {
 			return;
 		}
@@ -540,21 +545,14 @@ Level.prototype = {
 		e.preventDefault();
 	},
 
-	_updateSizeData: function _updateSizeData() {
-		var data = Level.data;
-		data.fontSize = window.innerHeight / 30;
-		document.documentElement.style.fontSize = data.fontSize + "px";
-		document.documentElement.style.lineHeight = data.lineHeight;
-
-		this._renderTexture();
-	},
-
 	_activateCell: function _activateCell(x, y) {
-		if (x < 0 || y < 0 || x >= this._size[0] || y >= this._size[1]) {
+		if (!this._isValid(x, y)) {
 			return;
 		}
-		if (y == 0 && x > 0) {
-			return;
+
+		if (this._current) {
+			var index = this._current[0] + (this._current[1] - 1) * this._size[0];
+			this._cells[index].deactivate();
 		}
 
 		this._current = [x, y];
@@ -566,8 +564,20 @@ Level.prototype = {
 		}
 	},
 
+	_isValid: function _isValid(x, y) {
+		if (x < 0 || y < 0 || x >= this._size[0] || y >= this._size[1]) {
+			return false;
+		}
+		if (y == 0 && x > 0) {
+			return false;
+		}
+		return true;
+	},
+
 	_build: function _build() {
 		var _this = this;
+
+		this._createTextureData();
 
 		this._dom.node.classList.add("level");
 
@@ -585,13 +595,12 @@ Level.prototype = {
 	},
 
 	_createTextureData: function _createTextureData() {
-		var data = Level.data;
-		data.random = [];
+		var texture = this._texture;
 
 		var width = 13;
 		var height = 6;
 		for (var i = 0; i < width; i++) {
-			data.random.push([]);
+			texture.push([]);
 			for (var j = 0; j < height; j++) {
 				var color = ROT.Color.randomize([40, 40, 40], 5);
 				var r = ROT.RNG.getUniform();
@@ -602,10 +611,9 @@ Level.prototype = {
 					color[1] *= 0.2;
 					color[2] *= 0.2;
 				}
-				data.random[i].push(color);
+				texture[i].push(color);
 			}
 		}
-		this._updateSizeData();
 	},
 
 	_renderTexture: function _renderTexture() {
@@ -621,48 +629,21 @@ Level.prototype = {
 		var w = ctx.measureText(ch).width;
 		var h = fontSize * data.lineHeight;
 
-		canvas.width = data.random.length * w;
-		canvas.height = data.random[0].length * h;
+		canvas.width = this._texture.length * w;
+		canvas.height = this._texture[0].length * h;
 		ctx.font = font;
 		ctx.textBaseline = "top";
 
-		data.random.forEach(function (value, col) {
+		this._texture.forEach(function (value, col) {
 			value.forEach(function (value, row) {
 				var x = col * w;
 				var y = fontSize * (row * data.lineHeight + data.lineHeight / 2 - 0.4);
-				ctx.fillStyle = ROT.Color.toRGB(data.random[col][row]);
+				ctx.fillStyle = ROT.Color.toRGB(value);
 				ctx.fillText(ch, x, y);
 			});
 		});
 
-		Level.data.texture = "url(" + canvas.toDataURL("text/png") + ")";
-	},
-
-	_resize: function _resize() {
-		var _this = this;
-
-		var w = window.innerWidth;
-		var h = window.innerHeight;
-
-		var node = this._dom.node;
-		node.style.width = this._size[0] * w + "px";
-		node.style.height = this._size[1] * h + "px";
-		node.style.backgroundImage = Level.data.texture;
-
-		this._dom.intro.style.width = w + "px";
-		this._dom.intro.style.height = h + "px";
-
-		this._cells.forEach(function (cell, index) {
-			var x = index % _this._size[0];
-			var y = Math.floor(index / _this._size[0]) + 1;
-
-			cell.resize(w, h);
-			var node = cell.getNode();
-			node.style.left = x * w + "px";
-			node.style.top = y * h + "px";
-		});
-
-		this._positionPort();
+		this._dom.node.style.backgroundImage = "url(" + canvas.toDataURL("text/png") + ")";
 	},
 
 	_positionPort: function _positionPort() {
@@ -803,6 +784,9 @@ var Game = function Game() {
 	};
 	this._level = null;
 
+	window.addEventListener("resize", this);
+	this._resize();
+
 	this._start();
 };
 
@@ -811,9 +795,12 @@ Game.prototype = {
 		var depth = this._level ? this._level.getDepth() : 0;
 		depth++;
 
+		var w = window.innerWidth;
+		var h = window.innerHeight;
+
 		this._level && this._level.deactivate();
 		this._level = new Level(depth);
-		this._level.activate();
+		this._level.activate(w, h);
 	},
 
 	over: function over() {
@@ -834,15 +821,20 @@ Game.prototype = {
 	handleEvent: function handleEvent(e) {
 		var _this = this;
 
+		if (e.type == "resize") {
+			this._resize();
+			return;
+		}
+
 		if (e.keyCode != 13) {
 			return;
 		}
 
-		window.removeEventListener("keydown", this);
-
-		if (this._level.getDepth() > 1) {
+		if (this._level) {
 			location.reload();
 		} else {
+			window.removeEventListener("keydown", this);
+			this.nextLevel();
 			this._dom.intro.classList.add("transparent");
 			setTimeout(function () {
 				_this._dom.intro.parentNode.removeChild(_this._dom.intro);
@@ -850,8 +842,22 @@ Game.prototype = {
 		}
 	},
 
+	_resize: function _resize() {
+		var w = window.innerWidth;
+		var h = window.innerHeight;
+
+		/* FIXME ne nekde u game? */
+		var data = Level.data;
+		data.fontSize = h / 30;
+		document.documentElement.style.fontSize = data.fontSize + "px";
+
+		/* fixme zbytecne? */
+		document.documentElement.style.lineHeight = data.lineHeight;
+
+		this._level && this._level.resize(w, h);
+	},
+
 	_start: function _start() {
-		this.nextLevel();
 		var node = this._dom.intro;
 		node.id = "intro";
 

@@ -19,6 +19,7 @@ var Cell = function(level, entity) {
 
 Cell.prototype = {
 	activate() {
+		console.log("activate", this);
 		window.addEventListener("keypress", this);
 		window.addEventListener("keydown", this);
 		
@@ -26,6 +27,7 @@ Cell.prototype = {
 	},
 
 	deactivate() {
+		console.log("deactivate", this);
 		window.removeEventListener("keypress", this);
 		window.removeEventListener("keydown", this);
 	},

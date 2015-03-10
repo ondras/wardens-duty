@@ -4,6 +4,9 @@ var Game = function() {
 		outro: document.createElement("div")
 	}
 	this._level = null;
+
+	window.addEventListener("resize", this);
+	this._resize();
 	
 	this._start();
 }
@@ -13,9 +16,12 @@ Game.prototype = {
 		var depth = (this._level ? this._level.getDepth() : 0);
 		depth++;
 		
+		var w = window.innerWidth;
+		var h = window.innerHeight;
+
 		this._level && this._level.deactivate();
 		this._level = new Level(depth);
-		this._level.activate();
+		this._level.activate(w, h);
 	},
 	
 	over() {
@@ -34,22 +40,41 @@ Game.prototype = {
 	},
 	
 	handleEvent(e) {
+		if (e.type == "resize") {
+			this._resize();
+			return;
+		}
+		
 		if (e.keyCode != 13) { return; }
 		
-		window.removeEventListener("keydown", this);
-		
-		if (this._level.getDepth() > 1) {
+		if (this._level) {
 			location.reload();
 		} else {
+			window.removeEventListener("keydown", this);
+			this.nextLevel();
 			this._dom.intro.classList.add("transparent");
 			setTimeout(() => {
 				this._dom.intro.parentNode.removeChild(this._dom.intro);
 			}, 2000);
 		}
 	},
+
+	_resize() {
+		var w = window.innerWidth;
+		var h = window.innerHeight;
+
+		/* FIXME ne nekde u game? */
+		var data = Level.data;
+		data.fontSize = h/30;
+		document.documentElement.style.fontSize = data.fontSize + "px";
+
+		/* fixme zbytecne? */
+		document.documentElement.style.lineHeight = data.lineHeight;
+
+		this._level && this._level.resize(w, h);
+	},
 	
 	_start() {
-		this.nextLevel();
 		var node = this._dom.intro;
 		node.id = "intro";
 		
