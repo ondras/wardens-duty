@@ -129,14 +129,14 @@ Cell.prototype = {
 		var ch = document.createElement("span");
 		var visual = entity.getVisual();
 		ch.innerHTML = visual.ch;
-		ch.style.color = visual.color;
+		ch.style.color = ROT.Color.toRGB(visual.color);
 		this._dom.entity.appendChild(ch);
 		this._dom.node.appendChild(this._dom.entity);
 
 		/* label */
 		var label = document.createElement("div");
 		label.classList.add("label");
-		label.innerHTML = `<span>${entity.getName()}</span>`;
+		label.innerHTML = `<span>${visual.name}</span>`;
 		this._dom.info.appendChild(label);
 
 		this._buildAttacks();

@@ -1,14 +1,14 @@
-var Entity = function() {
-	this._visual = {
-		ch: Math.random() > 0.5 ? "g" : "r",
-		color: "#2a2"
-	};
-	this._name = "Goblin";
+var Entity = function(visual = {ch:"?", color:"#fff", name:""}) {
+	this._visual = visual;
+}
+
+Entity.create = function(depth, element) {
+	/* FIXME shopeepers, traps, chests, more?? */
+	return Being.create(depth, element);
 }
 
 Entity.prototype = {
 	getVisual() { return this._visual; },
-	getName() { return this._name; },
 
 	getAttacks() {},
 

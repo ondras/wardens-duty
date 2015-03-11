@@ -20,7 +20,7 @@ Game.prototype = {
 		var h = window.innerHeight;
 
 		this._level && this._level.deactivate();
-		this._level = new Level(depth);
+		this._level = Level.create(depth);
 		this._level.activate(w, h);
 	},
 	
@@ -57,7 +57,7 @@ Game.prototype = {
 			this._dom.intro.classList.add("transparent");
 			setTimeout(() => {
 				this._dom.intro.parentNode.removeChild(this._dom.intro);
-			}, 2000);
+			}, 3000);
 		}
 	},
 
@@ -81,7 +81,18 @@ Game.prototype = {
 		node.id = "intro";
 		
 		node.innerHTML = `<h1>Warden's Duty</h1>
-			<p>The game you are about to play blah blah blah </p>
+			<p>The game you are about to play is a 7DRL. It was created 
+			in a limited time, might contain strange bugs and some 
+			say it contains <em>roguelike</em> (‽) elements. 
+			You will encounter goblins, rats, dragons, pangolins and 
+			maybe even a lutefisk.
+			<a href="https://www.youtube.com/watch?v=6dNAbb7vKjY">Be prepared.</a></p>
+			
+			<p>Warden't Duty was created by 
+			<a href="http://ondras.zarovi.cz/">Ondřej Žára</a> and the 
+			complete source code is available on
+			<a href="https://github.com/ondras/wardens-duty">GitHub</a>.
+			
 		`;
 		document.body.appendChild(node);
 		

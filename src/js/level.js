@@ -1,12 +1,16 @@
-var Level = function(depth) {
+/**
+ * @param {int} depth
+ * @param {int[2]} size
+ * @param {string} intro Introduction HTML
+ * @param {string} [element] For element-specific levels
+ */
+var Level = function(depth, size, intro, element) {
 	this._depth = depth;
+	this._size = size;
+	this._size[1]++; // room for the intro cell
 
-//	this._size = Generator.getSize(depth);
-	//this._size[1]++; // room for the intro cell
-	this._size = [2, 2];
 	this._cells = [];
 	this._current = null;
-
 	this._texture = [];
 
 	this._dom = {
@@ -16,13 +20,27 @@ var Level = function(depth) {
 
 	var count = this._size[0]*(this._size[1]-1);
 	for (var i=0;i<count;i++) {
-		var being = new Being();
-		var cell = new Cell(this, being);
+		var entity = Entity.create(depth, element);
+		var cell = new Cell(this, entity);
 		this._cells.push(cell);
 	}
 
-	this._build();
+	this._build(intro);
 	this.checkCells();
+}
+
+Level.create = function(depth) {
+	/**
+	 * General level layout:
+	 *     1. one goblin
+	 *     2:  ?
+	 *  7n-2: shops
+	 *    4n: elemental
+	 *    3+: with "P.S." in intro
+	 */
+
+	var intro = this._createIntro(depth);
+	return new this(depth, [1, 1], intro);
 }
 
 Level.data = {
@@ -142,7 +160,7 @@ Level.prototype = {
 		return true;
 	},
 
-	_build() {
+	_build(introHTML) {
 		this._createTextureData();
 
 		this._dom.node.classList.add("level");
@@ -152,7 +170,7 @@ Level.prototype = {
 
 		var intro = document.createElement("div");
 		intro.classList.add("intro");
-		intro.innerHTML = "This is intro pico";
+		intro.innerHTML = introHTML;
 		this._dom.intro.appendChild(intro);
 
 		this._cells.forEach(cell => this._dom.node.appendChild(cell.getNode()));
@@ -220,3 +238,29 @@ Level.prototype = {
 		node.style.top = top + "px";
 	}
 }
+
+Level._createIntro = function(depth) {
+	var intro = "";
+	
+	if (depth == 1) {
+		intro = `<p>welcome to the prison. As you might have already noticed, 
+		all our cells are full. You really need to take care of that.</p>`;
+	} else {
+		intro = `<p>welcome to prison level ${depth}. All the cells are full.</p>`
+	}
+	
+	intro = `${intro}<p class="sign">Yours,<br/>O.</p>`;
+	
+	if (depth >= 1) {
+		var ps = Level._ps;
+		intro = `${intro}<p class="ps">P.S. They say that ${ps[depth % ps.length]}.</p>`;
+	}
+	
+	return `<p>Warden,</p>${intro}`;
+}
+
+Level._ps = [
+	"aaa",
+	"bbb",
+	"ccc"
+].randomize();

@@ -215,14 +215,14 @@ Cell.prototype = {
 		var ch = document.createElement("span");
 		var visual = entity.getVisual();
 		ch.innerHTML = visual.ch;
-		ch.style.color = visual.color;
+		ch.style.color = ROT.Color.toRGB(visual.color);
 		this._dom.entity.appendChild(ch);
 		this._dom.node.appendChild(this._dom.entity);
 
 		/* label */
 		var label = document.createElement("div");
 		label.classList.add("label");
-		label.innerHTML = "<span>" + entity.getName() + "</span>";
+		label.innerHTML = "<span>" + visual.name + "</span>";
 		this._dom.info.appendChild(label);
 
 		this._buildAttacks();
@@ -334,19 +334,19 @@ Cell.prototype = {
 "use strict";
 
 var Entity = function Entity() {
-	this._visual = {
-		ch: Math.random() > 0.5 ? "g" : "r",
-		color: "#2a2"
-	};
-	this._name = "Goblin";
+	var visual = arguments[0] === undefined ? { ch: "?", color: "#fff", name: "" } : arguments[0];
+
+	this._visual = visual;
+};
+
+Entity.create = function (depth, element) {
+	/* FIXME shopeepers, traps, chests, more?? */
+	return Being.create(depth, element);
 };
 
 Entity.prototype = {
 	getVisual: function getVisual() {
 		return this._visual;
-	},
-	getName: function getName() {
-		return this._name;
 	},
 
 	getAttacks: function getAttacks() {},
@@ -365,11 +365,56 @@ Entity.prototype = {
 };
 "use strict";
 
-var Being = function Being() {
-	Entity.call(this);
+var Being = function Being(difficulty, visual) {
+	Entity.call(this, visual);
+	this._difficulty = difficulty;
+};
+Being.prototype = Object.create(Entity.prototype);
+
+Being.create = function (depth, element) {
+	var visual = null;
+	if (depth == 1) {
+		visual = this.ALL.goblin.visual;
+	} else {
+		var avail = [];
+		for (var p in this.ALL) {
+			/* filter all types and their variants */
+			this._availableVariants(depth, p, avail);
+		}
+
+		var result = avail.random();
+		var def = this.ALL[result.type];
+		var visual = Object.create(def.visual);
+
+		if (result.variant > 0) {
+			visual.name = def.variants[result.variant - 1].replace("{}", visual.name);
+			visual.color = ROT.Color.interpolate(visual.color, [0, 0, 0], result.variant / 10);
+			if (result.variant >= def.variants.length / 2) {
+				visual.ch = visual.ch.toUpperCase();
+			}
+		}
+	}
+	return new this(depth, visual);
 };
 
-Being.prototype = Object.create(Entity.prototype);
+Being._availableVariants = function (depth, type, available) {
+	var def = this.ALL[type];
+
+	var min = def.min || 0;
+	var max = def.max || Infinity;
+	if (depth >= min && depth <= max) {
+		available.push({ type: type, variant: 0 });
+	}
+
+	max && def.variants && def.variants.forEach(function (variant, index) {
+		var range = max - min;
+		var variantMin = min + range * (index + 1) / 2;
+		var variantMax = variantMin + range;
+		if (depth >= variantMin && depth <= variantMax) {
+			available.push({ type: type, variant: index + 1 });
+		}
+	});
+};
 
 Being.prototype.getAttacks = function (pc) {
 	var results = [];
@@ -413,17 +458,52 @@ Being.prototype.computeOutcome = function (attack) {
 
 	return outcome;
 };
+
+Being.ALL = {
+	goblin: {
+		visual: {
+			name: "Goblin",
+			ch: "g",
+			color: [20, 250, 20]
+		},
+		variants: ["{} Chieftain", "Large {}", "{} King"],
+		max: 10
+	},
+
+	rat: {
+		visual: {
+			name: "Rat",
+			ch: "g",
+			color: [150, 100, 20]
+		},
+		variants: ["Giant {}"],
+		max: 10
+	},
+
+	bat: {
+		visual: {
+			name: "Bat",
+			ch: "b",
+			color: [180, 180, 180]
+		},
+		variants: ["Giant {}"],
+		max: 10
+	} };
 "use strict";
 
-var Level = function Level(depth) {
+/**
+ * @param {int} depth
+ * @param {int[2]} size
+ * @param {string} intro Introduction HTML
+ * @param {string} [element] For element-specific levels
+ */
+var Level = function Level(depth, size, intro, element) {
 	this._depth = depth;
+	this._size = size;
+	this._size[1]++; // room for the intro cell
 
-	//	this._size = Generator.getSize(depth);
-	//this._size[1]++; // room for the intro cell
-	this._size = [2, 2];
 	this._cells = [];
 	this._current = null;
-
 	this._texture = [];
 
 	this._dom = {
@@ -433,13 +513,27 @@ var Level = function Level(depth) {
 
 	var count = this._size[0] * (this._size[1] - 1);
 	for (var i = 0; i < count; i++) {
-		var being = new Being();
-		var cell = new Cell(this, being);
+		var entity = Entity.create(depth, element);
+		var cell = new Cell(this, entity);
 		this._cells.push(cell);
 	}
 
-	this._build();
+	this._build(intro);
 	this.checkCells();
+};
+
+Level.create = function (depth) {
+	/**
+  * General level layout:
+  *     1. one goblin
+  *     2:  ?
+  *  7n-2: shops
+  *    4n: elemental
+  *    3+: with "P.S." in intro
+  */
+
+	var intro = this._createIntro(depth);
+	return new this(depth, [1, 1], intro);
 };
 
 Level.data = {
@@ -583,7 +677,7 @@ Level.prototype = {
 		return true;
 	},
 
-	_build: function _build() {
+	_build: function _build(introHTML) {
 		var _this = this;
 
 		this._createTextureData();
@@ -595,7 +689,7 @@ Level.prototype = {
 
 		var intro = document.createElement("div");
 		intro.classList.add("intro");
-		intro.innerHTML = "This is intro pico";
+		intro.innerHTML = introHTML;
 		this._dom.intro.appendChild(intro);
 
 		this._cells.forEach(function (cell) {
@@ -664,6 +758,27 @@ Level.prototype = {
 		node.style.top = top + "px";
 	}
 };
+
+Level._createIntro = function (depth) {
+	var intro = "";
+
+	if (depth == 1) {
+		intro = "<p>welcome to the prison. As you might have already noticed, \n\t\tall our cells are full. You really need to take care of that.</p>";
+	} else {
+		intro = "<p>welcome to prison level " + depth + ". All the cells are full.</p>";
+	}
+
+	intro = "" + intro + "<p class=\"sign\">Yours,<br/>O.</p>";
+
+	if (depth >= 1) {
+		var ps = Level._ps;
+		intro = "" + intro + "<p class=\"ps\">P.S. They say that " + ps[depth % ps.length] + ".</p>";
+	}
+
+	return "<p>Warden,</p>" + intro;
+};
+
+Level._ps = ["aaa", "bbb", "ccc"].randomize();
 "use strict";
 
 var PC = function PC() {
@@ -808,7 +923,7 @@ Game.prototype = {
 		var h = window.innerHeight;
 
 		this._level && this._level.deactivate();
-		this._level = new Level(depth);
+		this._level = Level.create(depth);
 		this._level.activate(w, h);
 	},
 
@@ -847,7 +962,7 @@ Game.prototype = {
 			this._dom.intro.classList.add("transparent");
 			setTimeout(function () {
 				_this._dom.intro.parentNode.removeChild(_this._dom.intro);
-			}, 2000);
+			}, 3000);
 		}
 	},
 
@@ -870,7 +985,7 @@ Game.prototype = {
 		var node = this._dom.intro;
 		node.id = "intro";
 
-		node.innerHTML = "<h1>Warden's Duty</h1>\n\t\t\t<p>The game you are about to play blah blah blah </p>\n\t\t";
+		node.innerHTML = "<h1>Warden's Duty</h1>\n\t\t\t<p>The game you are about to play is a 7DRL. It was created \n\t\t\tin a limited time, might contain strange bugs and some \n\t\t\tsay it contains <em>roguelike</em> (‽) elements. \n\t\t\tYou will encounter goblins, rats, dragons, pangolins and \n\t\t\tmaybe even a lutefisk.\n\t\t\t<a href=\"https://www.youtube.com/watch?v=6dNAbb7vKjY\">Be prepared.</a></p>\n\t\t\t\n\t\t\t<p>Warden't Duty was created by \n\t\t\t<a href=\"http://ondras.zarovi.cz/\">Ondřej Žára</a> and the \n\t\t\tcomplete source code is available on\n\t\t\t<a href=\"https://github.com/ondras/wardens-duty\">GitHub</a>.\n\t\t\t\n\t\t";
 		document.body.appendChild(node);
 
 		window.addEventListener("keydown", this);
