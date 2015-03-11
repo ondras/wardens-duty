@@ -29,8 +29,14 @@ Game.prototype = {
 		
 		var node = this._dom.outro;
 		node.id = "outro";
+		var depth = this._level.getDepth();
 		node.innerHTML = `<h1>Game over</h1>
-			<p>jak cyp</p>
+			<p>You are unable to continue your duty. The game is over 
+			and all the vicious critters locked inside cells are too 
+			hard to defeat.</p>
+			<p>On the other hand, you did a fine job cleaning the 
+			prison up. Many cells are now free and you managed to ascend
+			to level ${depth}.</p>
 		`;
 		/* FIXME outro */
 		node.classList.add("transparent");
@@ -82,7 +88,7 @@ Game.prototype = {
 		
 		node.innerHTML = `<h1>Warden's Duty</h1>
 			<p>The game you are about to play is a 7DRL. It was created 
-			in a limited time, might contain strange bugs and some 
+			in a limited time, might exhibit strange bugs and some 
 			say it contains <em>roguelike</em> (‽) elements. 
 			You will encounter goblins, rats, dragons, pangolins and 
 			maybe even a lutefisk.
@@ -92,8 +98,10 @@ Game.prototype = {
 			<a href="http://ondras.zarovi.cz/">Ondřej Žára</a> and the 
 			complete source code is available on
 			<a href="https://github.com/ondras/wardens-duty">GitHub</a>.
-			If you find the game's layout broken, try changing your 
-			browser's size to a more 
+			If you find the game's layout broken, try adjusting your window
+			to be more "widescreen", i.e. considerably wider than it is tall.</p>
+			
+			<p>To start the game, please press <strong>Enter</strong>.</p> 
 		`;
 		document.body.appendChild(node);
 		

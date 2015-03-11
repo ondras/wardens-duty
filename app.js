@@ -932,7 +932,8 @@ Game.prototype = {
 
 		var node = this._dom.outro;
 		node.id = "outro";
-		node.innerHTML = "<h1>Game over</h1>\n\t\t\t<p>jak cyp</p>\n\t\t";
+		var depth = this._level.getDepth();
+		node.innerHTML = "<h1>Game over</h1>\n\t\t\t<p>You are unable to continue your duty. The game is over \n\t\t\tand all the vicious critters locked inside cells are too \n\t\t\thard to defeat.</p>\n\t\t\t<p>On the other hand, you did a fine job cleaning the \n\t\t\tprison up. Many cells are now free and you managed to ascend\n\t\t\tto level " + depth + ".</p>\n\t\t";
 		/* FIXME outro */
 		node.classList.add("transparent");
 		document.body.appendChild(node);
@@ -985,7 +986,7 @@ Game.prototype = {
 		var node = this._dom.intro;
 		node.id = "intro";
 
-		node.innerHTML = "<h1>Warden's Duty</h1>\n\t\t\t<p>The game you are about to play is a 7DRL. It was created \n\t\t\tin a limited time, might contain strange bugs and some \n\t\t\tsay it contains <em>roguelike</em> (‽) elements. \n\t\t\tYou will encounter goblins, rats, dragons, pangolins and \n\t\t\tmaybe even a lutefisk.\n\t\t\t<a href=\"https://www.youtube.com/watch?v=6dNAbb7vKjY\">Be prepared.</a></p>\n\t\t\t\n\t\t\t<p>Warden't Duty was created by \n\t\t\t<a href=\"http://ondras.zarovi.cz/\">Ondřej Žára</a> and the \n\t\t\tcomplete source code is available on\n\t\t\t<a href=\"https://github.com/ondras/wardens-duty\">GitHub</a>.\n\t\t\t\n\t\t";
+		node.innerHTML = "<h1>Warden's Duty</h1>\n\t\t\t<p>The game you are about to play is a 7DRL. It was created \n\t\t\tin a limited time, might exhibit strange bugs and some \n\t\t\tsay it contains <em>roguelike</em> (‽) elements. \n\t\t\tYou will encounter goblins, rats, dragons, pangolins and \n\t\t\tmaybe even a lutefisk.\n\t\t\t<a href=\"https://www.youtube.com/watch?v=6dNAbb7vKjY\">Be prepared.</a></p>\n\t\t\t\n\t\t\t<p>Warden't Duty was created by \n\t\t\t<a href=\"http://ondras.zarovi.cz/\">Ondřej Žára</a> and the \n\t\t\tcomplete source code is available on\n\t\t\t<a href=\"https://github.com/ondras/wardens-duty\">GitHub</a>.\n\t\t\tIf you find the game's layout broken, try adjusting your window\n\t\t\tto be more \"widescreen\", i.e. considerably wider than it is tall.</p>\n\t\t\t\n\t\t\t<p>To start the game, please press <strong>Enter</strong>.</p> \n\t\t";
 		document.body.appendChild(node);
 
 		window.addEventListener("keydown", this);
