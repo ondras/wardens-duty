@@ -17,7 +17,7 @@ var Stats = {
 	},
 	"gold": {
 		label: "Gold",
-		color: "#ee3",
+		color: ROT.Color.toHex([250, 230, 20]),
 		def: 0
 	},
 	"ammo": {

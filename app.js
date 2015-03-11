@@ -19,7 +19,7 @@ var Stats = {
 	},
 	gold: {
 		label: "Gold",
-		color: "#ee3",
+		color: ROT.Color.toHex([250, 230, 20]),
 		def: 0
 	},
 	ammo: {
@@ -328,14 +328,15 @@ var Entity = function Entity() {
 };
 
 Entity.create = function (depth, element, index) {
-	/* FIXME shopeepers, traps, chests, more?? */
+	/* FIXME shopkeepers, traps, chests, more?? */
 
 	if (depth == 1) {
 		return Being.create(depth, element);
 	} else if (false) {} else {
 		var types = {
 			//			"Being": 1,
-			Chest: 1
+			//			"Chest": 1
+			Trap: 1
 		};
 		var type = ROT.RNG.getWeightedValue(types);
 		return window[type].create(depth, element);
@@ -910,7 +911,10 @@ Gauge.prototype = {
 
 var Chest = function Chest(depth) {
 	this._depth = depth;
-	this._trapped = ROT.RNG.getUniform() > 0.5;
+	this._trapped = Rules.isChestTrapped(depth);
+	this._gold = Rules.getChestGold(depth);
+	this._damage = Rules.getChestDamage(depth);
+
 	var name = "T" + (this._trapped ? "rapped t" : "") + "reasure chest";
 	Entity.call(this, { ch: "$", color: [250, 230, 20], name: name });
 };
@@ -943,14 +947,67 @@ Chest.prototype.computeOutcome = function (id) {
 			break;
 
 		case "open":
-			result.gold = this._depth; // FIXME
+			result.gold = this._gold;
 			if (this._trapped) {
-				result.hp = Math.round(-this._depth);
-			} // FIXME
+				result.hp = -this._damage;
+			}
 			break;
 	}
 
 	return result;
+};
+"use strict";
+
+var Trap = function Trap(depth) {
+	this._depth = depth;
+	this._damage = Rules.getTrapDamage(depth);
+
+	var hsl = [ROT.RNG.getUniform(), 1, 1];
+	var rgb = ROT.Color.hsl2rgb(hsl);
+	var name = "Trap";
+	Entity.call(this, { ch: "%", color: rgb, name: name }); // FIXME char, FIXME types
+};
+Trap.prototype = Object.create(Entity.prototype);
+
+Trap.create = function (depth, element) {
+	return new this(depth);
+};
+
+Trap.prototype.getAttacks = function () {
+	var results = [];
+
+	results.push({
+		id: "setoff",
+		label: "Set off the trap"
+	});
+
+	return results;
+};
+
+Trap.prototype.computeOutcome = function (id) {
+	var result = {};
+	result.hp = -this._damage;
+
+	return result;
+};
+"use strict";
+
+var Rules = {
+	getTrapDamage: function getTrapDamage(depth) {
+		return depth;
+	},
+
+	getChestDamage: function getChestDamage(depth) {
+		return this.getTrapDamage(Math.round(depth / 2));
+	},
+
+	getChestGold: function getChestGold(depth) {
+		return depth;
+	},
+
+	isChestTrapped: function isChestTrapped(depth) {
+		return ROT.RNG.getUniform() > 0.5;
+	}
 };
 "use strict";
 

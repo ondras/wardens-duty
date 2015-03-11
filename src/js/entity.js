@@ -3,7 +3,7 @@ var Entity = function(visual = {ch:"?", color:"#fff", name:""}) {
 }
 
 Entity.create = function(depth, element, index) {
-	/* FIXME shopeepers, traps, chests, more?? */
+	/* FIXME shopkeepers, traps, chests, more?? */
 	
 	if (depth == 1) {
 		return Being.create(depth, element);
@@ -11,7 +11,8 @@ Entity.create = function(depth, element, index) {
 	} else {
 		var types = {
 //			"Being": 1,
-			"Chest": 1
+//			"Chest": 1
+			"Trap": 1
 		}
 		var type = ROT.RNG.getWeightedValue(types);
 		return window[type].create(depth, element);
