@@ -933,7 +933,7 @@ Game.prototype = {
 		var node = this._dom.outro;
 		node.id = "outro";
 		var depth = this._level.getDepth();
-		node.innerHTML = "<h1>Game over</h1>\n\t\t\t<p>You are unable to continue your duty. The game is over \n\t\t\tand all the vicious critters locked inside cells are too \n\t\t\thard to defeat.</p>\n\t\t\t<p>On the other hand, you did a fine job cleaning the \n\t\t\tprison up. Many cells are now free and you managed to ascend\n\t\t\tto level " + depth + ".</p>\n\t\t";
+		node.innerHTML = "<h1>Game over</h1>\n\t\t\t<p>You are unable to continue your duty. All the vicious\n\t\t\tcritters locked inside cells are too hard to defeat \n\t\t\tand the game is over.</p>\n\n\t\t\t<p>On the other hand, you did a fine job cleaning the \n\t\t\tprison up. Many cells are now free and you managed to descend\n\t\t\tto level " + depth + ". Click the icons below to share your \n\t\t\tscore!</p>\n\t\t\t\n\t\t\t<a class=\"twitter\">\n\t\t\t\t<span>t</span>\n\t\t\t\t<br/>Twitter\n\t\t\t</a>\n\n\t\t\t<a class=\"gplus\">\n\t\t\t\t<span>g+</span>\n\t\t\t\t<br/>Google Plus\n\t\t\t</a>\n\t\t\t\n\t\t\t<a class=\"fb\">\n\t\t\t\t<span>f</span>\n\t\t\t\t<br/>Facebook\n\t\t\t</a>\n\n\t\t\t<p>Press <strong>Enter</strong> to play again!</p>\n\t\t";
 		/* FIXME outro */
 		node.classList.add("transparent");
 		document.body.appendChild(node);
@@ -990,6 +990,9 @@ Game.prototype = {
 		document.body.appendChild(node);
 
 		window.addEventListener("keydown", this);
+
+		this.nextLevel();
+		this.over();
 	}
 };
 

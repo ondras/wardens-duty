@@ -187,3 +187,28 @@ body {
   text-align: center;
   color: #c33;
 }
+#outro p {
+  clear: both;
+}
+#outro a {
+  float: left;
+  margin: 1em 10% 3em;
+  color: #fff;
+  text-decoration: none;
+  text-align: center;
+}
+#outro a span {
+  display: inline-block;
+  width: 3em;
+  line-height: 3;
+  font-weight: bold;
+}
+#outro a.gplus span {
+  background-color: #dd4b39;
+}
+#outro a.twitter span {
+  background-color: #55acee;
+}
+#outro a.fb span {
+  background-color: #3B5998;
+}

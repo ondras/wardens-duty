@@ -31,12 +31,31 @@ Game.prototype = {
 		node.id = "outro";
 		var depth = this._level.getDepth();
 		node.innerHTML = `<h1>Game over</h1>
-			<p>You are unable to continue your duty. The game is over 
-			and all the vicious critters locked inside cells are too 
-			hard to defeat.</p>
+			<p>You are unable to continue your duty. All the vicious
+			critters locked inside cells are too hard to defeat 
+			and the game is over.</p>
+
 			<p>On the other hand, you did a fine job cleaning the 
-			prison up. Many cells are now free and you managed to ascend
-			to level ${depth}.</p>
+			prison up. Many cells are now free and you managed to descend
+			to level ${depth}. Click the icons below to share your 
+			score!</p>
+			
+			<a class="twitter">
+				<span>t</span>
+				<br/>Twitter
+			</a>
+
+			<a class="gplus">
+				<span>g+</span>
+				<br/>Google Plus
+			</a>
+			
+			<a class="fb">
+				<span>f</span>
+				<br/>Facebook
+			</a>
+
+			<p>Press <strong>Enter</strong> to play again!</p>
 		`;
 		/* FIXME outro */
 		node.classList.add("transparent");
@@ -106,6 +125,9 @@ Game.prototype = {
 		document.body.appendChild(node);
 		
 		window.addEventListener("keydown", this);
+		
+		this.nextLevel();
+		this.over();
 	}
 }
 
