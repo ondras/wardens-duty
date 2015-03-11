@@ -92,7 +92,8 @@ Game.prototype = {
 			<a href="http://ondras.zarovi.cz/">Ondřej Žára</a> and the 
 			complete source code is available on
 			<a href="https://github.com/ondras/wardens-duty">GitHub</a>.
-			
+			If you find the game's layout broken, try changing your 
+			browser's size to a more 
 		`;
 		document.body.appendChild(node);
 		
