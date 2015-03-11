@@ -20,7 +20,7 @@ Gauge.prototype = {
 	_build() {
 		var conf = this._conf;
 		this._node.classList.add("gauge");
-		this._node.style.backgroundColor = conf.color;
+		this._node.style.backgroundColor = ROT.Color.toRGB(conf.color);
 		
 		if (conf.newValue < conf.min) {
 			this._node.classList.add("underflow");

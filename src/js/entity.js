@@ -3,15 +3,16 @@ var Entity = function(visual = {ch:"?", color:"#fff", name:""}) {
 }
 
 Entity.create = function(depth, element, index) {
-	/* FIXME shopkeepers, traps, chests, more?? */
+	/* FIXME shopkeepers, more features?? */
 	
 	if (depth == 1) {
 		return Being.create(depth, element);
-	} else if (false) { /* FIXME shop */
+	} else if (Rules.isLevelShop(depth)) { /* FIXME shop */
+		return Shopkeeper.create(depth, index);
 	} else {
 		var types = {
-//			"Being": 1,
-//			"Chest": 1
+			"Being": 15,
+			"Chest": 1,
 			"Trap": 1
 		}
 		var type = ROT.RNG.getWeightedValue(types);
@@ -21,13 +22,8 @@ Entity.create = function(depth, element, index) {
 
 Entity.prototype = {
 	getVisual() { return this._visual; },
-
 	getAttacks() {},
-
-	computeOutcome(attack) {
-
-	},
-
+	computeOutcome(attack) {},
 	doAttack(attack) {
 		var outcome = this.computeOutcome(attack);
 		var stats = pc.getStats();

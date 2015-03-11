@@ -1,6 +1,5 @@
 - content
   - beings
-  - traps
   - shopkeepers
   - two more attributes
   - per-level intros
@@ -10,8 +9,9 @@
 - logic
   - xp levels
   - leveling
-  - being generator
   - thematic levels
+  - achievements?
+  - minimap
   - rules
     - chances
     - chest gold

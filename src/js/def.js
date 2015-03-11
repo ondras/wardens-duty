@@ -1,7 +1,7 @@
 var Stats = {
 	"hp": {
 		label: "Health",
-		color: "#3e3",
+		color: [50, 220, 50],
 		def: 100
 	},
 	"maxhp": {
@@ -9,7 +9,7 @@ var Stats = {
 	},
 	"mana": {
 		label: "Mana",
-		color: "#33e",
+		color: [50, 50, 220],
 		def: 100
 	},
 	"maxmana": {
@@ -17,17 +17,17 @@ var Stats = {
 	},
 	"gold": {
 		label: "Gold",
-		color: ROT.Color.toHex([250, 230, 20]),
+		color: [250, 230, 20],
 		def: 0
 	},
 	"ammo": {
 		label: "Arrows",
-		color: "#a82",
+		color: [200, 120, 30],
 		def: 3
 	},
 	"xp": {
 		label: "Experience",
-		color: "#a3a",
+		color: [200, 50, 200],
 		def: 5
 	}
 }
@@ -35,16 +35,19 @@ var Stats = {
 var Elements = {
 	"poison": {
 		label: "Poison",
+		color: [20, 255, 20],
 		def: 0
 	},
 
 	"fire": {
 		label: "Fire",
+		color: [255, 20, 20],
 		def: 0
 	},
 
 	"water": {
 		label: "Water",
+		color: [20, 20, 255],
 		def: 0
 	}
 }
@@ -52,6 +55,7 @@ var Elements = {
 Object.keys(Elements).forEach(key => {
 	Stats[`res-${key}`] = {
 		label: `${Elements[key].label} resistance`,
+		color: Elements[key].color,
 		def: 0
 	}
 });

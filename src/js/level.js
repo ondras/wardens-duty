@@ -1,12 +1,19 @@
 /**
  * @param {int} depth
- * @param {int[2]} size
+ * @param {int} count
  * @param {string} intro Introduction HTML
  * @param {string} [element] For element-specific levels
  */
-var Level = function(depth, size, intro, element) {
+var Level = function(depth, count, intro, element) {
 	this._depth = depth;
-	this._size = size;
+	
+	if (count <= 3) {
+		this._size = [count, 1];
+	} else if (count <= 6) {
+		this._size = [count/2, 2];
+	} else {
+		this._size = [3, 3];
+	}
 	this._size[1]++; // room for the intro cell
 
 	this._cells = [];
@@ -18,10 +25,9 @@ var Level = function(depth, size, intro, element) {
 		intro: document.createElement("div")
 	}
 
-	var count = this._size[0]*(this._size[1]-1);
 	for (var i=0;i<count;i++) {
 		var entity = Entity.create(depth, element);
-		var cell = new Cell(this, entity);
+		var cell = new Cell(this, entity, i);
 		this._cells.push(cell);
 	}
 
@@ -33,26 +39,30 @@ Level.create = function(depth) {
 	/**
 	 * General level contents:
 	 *     1. one goblin
-	 *     2:  ?
-	 *     3: 
+	 *     2: two monsters with attack types
+	 *     3: two monsters, leveling up
+	 *     4: elemental level
 	 *  7n-2: shops
-	 *    4n: elemental
+	 *  5n-1: elemental
 	 *    3+: with "P.S." in intro
-	 * 
-	 * Level sizes:
-	 *     1. 1x1
-	 *     2. 2x1
-	 *     3. 3x1
 	 */
 
 	var intro = this._createIntro(depth);
-	return new this(depth, [1, 1], intro);
+	var count = Rules.getEntityCount(depth);
+	var element = null;
+	
+	if (Rules.isLevelElemental(depth)) {
+		element = Object.keys(Elements).random();
+	}
+	return new this(depth, count, intro, element);
 }
 
 Level.data = {
 	fontSize: 24,
 	lineHeight: 1,
-	fontFamily: "serif"
+	fontFamily: "serif",
+	elementalAnnounced: false,
+	shopAnnounced: false
 }
 
 Level.prototype = {
@@ -250,16 +260,40 @@ Level._createIntro = function(depth) {
 	
 	if (depth == 1) {
 		intro = `<p>welcome to the prison. As you might have already noticed, 
-		all our cells are full. You really need to take care of that.</p>`;
+		all our cells are full. You really need to take fix that.</p>
+		<p>This first level has just one cell. Taking care about that goblin
+		there shall be an easy task. Just press the <strong>↓</strong> 
+		(or <strong>s</strong>) key to move around and do what you must.</p>
+		<p>By the way: you will see your own stats below each enemy.</p>
+		`;
+	} else if (depth == 2) {
+		intro = `<p>good job! Welcome to prison level ${depth}. The cells 
+		here are full as well. 
+		<p>You can now pick from multiple ways to deal with your enemies.
+		Also, this level has two cells and both need to be cleared. 
+		To move around, use <strong>←→↑↓</strong> or 
+		<strong>WASD</strong> or <strong>HJKL</strong> keys.</p>
+		`;
 	} else {
 		intro = `<p>welcome to prison level ${depth}. All the cells are full.</p>`
 	}
 	
-	// FIXME level 3 => levelup
+	if (depth == 3) {
+		intro = `${intro}<p>Levelup FIXME</p>
+		<p>As you descend deeper, the number of cells will increase. 
+		They can be also located in multiple rows.</p> 
+		`;
+	} else if (Rules.isLevelElemental(depth) && !this.data.elementalAnnounced) {
+		this.data.elementalAnnounced = true;
+		intro = `${intro}<p>Elemental FIXME</p>`;
+	} else if (Rules.isLevelShop(depth) && !this.data.shopAnnounced) {
+		this.data.shopAnnounced = true;
+		intro = `${intro}<p>Shop FIXME</p>`;
+	}
 	
 	intro = `${intro}<p class="sign">Yours,<br/>O.</p>`;
 	
-	if (depth >= 1) {
+	if (depth >= 3) {
 		var ps = Level._ps;
 		intro = `${intro}<p class="ps">P.S. They say that ${ps[depth % ps.length]}.</p>`;
 	}
@@ -279,5 +313,6 @@ Level._ps = [
 	"deeper cells have tougher enemies",
 	"there is no way out of this prison",
 	"being a Warden is cool",
-	"being a Warden is risky"
+	"being a Warden is risky",
+	"captured goldfish may give you a wish"
 ].randomize();

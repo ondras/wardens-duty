@@ -3,7 +3,7 @@
 var Stats = {
 	hp: {
 		label: "Health",
-		color: "#3e3",
+		color: [50, 220, 50],
 		def: 100
 	},
 	maxhp: {
@@ -11,7 +11,7 @@ var Stats = {
 	},
 	mana: {
 		label: "Mana",
-		color: "#33e",
+		color: [50, 50, 220],
 		def: 100
 	},
 	maxmana: {
@@ -19,17 +19,17 @@ var Stats = {
 	},
 	gold: {
 		label: "Gold",
-		color: ROT.Color.toHex([250, 230, 20]),
+		color: [250, 230, 20],
 		def: 0
 	},
 	ammo: {
 		label: "Arrows",
-		color: "#a82",
+		color: [200, 120, 30],
 		def: 3
 	},
 	xp: {
 		label: "Experience",
-		color: "#a3a",
+		color: [200, 50, 200],
 		def: 5
 	}
 };
@@ -37,16 +37,19 @@ var Stats = {
 var Elements = {
 	poison: {
 		label: "Poison",
+		color: [20, 255, 20],
 		def: 0
 	},
 
 	fire: {
 		label: "Fire",
+		color: [255, 20, 20],
 		def: 0
 	},
 
 	water: {
 		label: "Water",
+		color: [20, 20, 255],
 		def: 0
 	}
 };
@@ -54,6 +57,7 @@ var Elements = {
 Object.keys(Elements).forEach(function (key) {
 	Stats["res-" + key] = {
 		label: "" + Elements[key].label + " resistance",
+		color: Elements[key].color,
 		def: 0
 	};
 });
@@ -328,14 +332,17 @@ var Entity = function Entity() {
 };
 
 Entity.create = function (depth, element, index) {
-	/* FIXME shopkeepers, traps, chests, more?? */
+	/* FIXME shopkeepers, more features?? */
 
 	if (depth == 1) {
 		return Being.create(depth, element);
-	} else if (false) {} else {
+	} else if (Rules.isLevelShop(depth)) {
+		/* FIXME shop */
+		return Shopkeeper.create(depth, index);
+	} else {
 		var types = {
-			//			"Being": 1,
-			//			"Chest": 1
+			Being: 15,
+			Chest: 1,
 			Trap: 1
 		};
 		var type = ROT.RNG.getWeightedValue(types);
@@ -347,11 +354,8 @@ Entity.prototype = {
 	getVisual: function getVisual() {
 		return this._visual;
 	},
-
 	getAttacks: function getAttacks() {},
-
 	computeOutcome: function computeOutcome(attack) {},
-
 	doAttack: function doAttack(attack) {
 		var outcome = this.computeOutcome(attack);
 		var stats = pc.getStats();
@@ -362,29 +366,37 @@ Entity.prototype = {
 		}
 	}
 };
-/* FIXME shop */
 "use strict";
 
-var Being = function Being(difficulty, visual) {
+var Being = function Being(difficulty, visual, element) {
 	Entity.call(this, visual);
 	this._difficulty = difficulty;
+	this._element = element;
 };
 Being.prototype = Object.create(Entity.prototype);
 
 Being.create = function (depth, element) {
+	var _this = this;
+
 	var visual = null;
 	if (depth == 1) {
-		visual = this.ALL.goblin.visual;
+		visual = this.ALL[0].visual;
 	} else {
 		var avail = [];
-		for (var p in this.ALL) {
-			/* filter all types and their variants */
-			this._availableVariants(depth, p, avail);
-		}
+		this.ALL.forEach(function (def) {
+			return _this._availableVariants(avail, depth, def, element);
+		});
 
 		var result = avail.random();
-		var def = this.ALL[result.type];
+		var def = result.def;
 		var visual = Object.create(def.visual);
+
+		if (!visual.color) {
+			/* apply element */
+			element = element || Object.keys(Elements).random();
+			visual.color = Elements[element].color;
+			visual.name = "" + Elements[element].label + " " + visual.name;
+		}
 
 		if (result.variant > 0) {
 			visual.name = def.variants[result.variant - 1].replace("{}", visual.name);
@@ -394,24 +406,34 @@ Being.create = function (depth, element) {
 			}
 		}
 	}
-	return new this(depth, visual);
+
+	var difficulty = Rules.getBeingDifficulty(depth);
+	return new this(difficulty, visual, element);
 };
 
-Being._availableVariants = function (depth, type, available) {
-	var def = this.ALL[type];
+Being._availableVariants = function (available, depth, def, element) {
+	if (element && def.visual.color) {
+		return;
+	} // elemental do not have colors
 
 	var min = def.min || 0;
 	var max = def.max || Infinity;
 	if (depth >= min && depth <= max) {
-		available.push({ type: type, variant: 0 });
+		available.push({ def: def, variant: 0 });
 	}
 
 	max && def.variants && def.variants.forEach(function (variant, index) {
 		var range = max - min;
-		var variantMin = min + range * (index + 1) / 2;
+		var num = index + 1;
+		var variantMin = min + range * num / 2;
 		var variantMax = variantMin + range;
 		if (depth >= variantMin && depth <= variantMax) {
-			available.push({ type: type, variant: index + 1 });
+			/* variant within range */
+			available.push({ def: def, variant: num });
+		}
+		if (depth > variantMax && index + 1 == def.variants.length) {
+			/* past max variant range */
+			available.push({ def: def, variant: num });
 		}
 	});
 };
@@ -423,6 +445,10 @@ Being.prototype.getAttacks = function (pc) {
 		id: "melee",
 		label: "Melee attack"
 	});
+
+	if (this._difficulty == 1) {
+		return results;
+	} // first goblin
 
 	results.push({
 		id: "ranged",
@@ -440,11 +466,15 @@ Being.prototype.getAttacks = function (pc) {
 Being.prototype.computeOutcome = function (attack) {
 	var outcome = {};
 
-	outcome.xp = +5;
+	outcome.xp = this._difficulty;
+
+	if (this._element) {
+		outcome["res-" + this._element] = 5;
+	}
 
 	switch (attack) {
 		case "melee":
-			outcome.hp = -50;
+			outcome.hp = -this._difficulty;
 			break;
 
 		case "ranged":
@@ -452,54 +482,143 @@ Being.prototype.computeOutcome = function (attack) {
 			break;
 
 		case "magic":
-			outcome.mana = -2;
+			outcome.mana = -this._difficulty;
 			break;
 	}
 
 	return outcome;
 };
 
-Being.ALL = {
-	goblin: {
-		visual: {
-			name: "Goblin",
-			ch: "g",
-			color: [20, 250, 20]
-		},
-		variants: ["{} Chieftain", "Large {}", "{} King"],
-		max: 10
+Being.ALL = [{
+	visual: {
+		name: "Goblin",
+		ch: "g",
+		color: [20, 250, 20]
 	},
-
-	rat: {
-		visual: {
-			name: "Rat",
-			ch: "r",
-			color: [150, 100, 20]
-		},
-		variants: ["Giant {}"],
-		max: 10
+	variants: ["{} Chieftain", "Large {}", "{} King"],
+	max: 6
+}, {
+	visual: {
+		name: "Rat",
+		ch: "r",
+		color: [150, 100, 20]
 	},
-
-	bat: {
-		visual: {
-			name: "Bat",
-			ch: "b",
-			color: [180, 180, 180]
-		},
-		variants: ["Giant {}"],
-		max: 10
-	} };
+	variants: ["Giant {}"],
+	max: 6
+}, {
+	visual: {
+		name: "Bat",
+		ch: "b",
+		color: [180, 180, 180]
+	},
+	variants: ["Giant {}"],
+	max: 6
+}, {
+	visual: {
+		name: "Dog",
+		ch: "d",
+		color: [200, 150, 100]
+	},
+	variants: ["Large {}"],
+	max: 6
+}, {
+	visual: {
+		name: "Pangolin",
+		ch: "p",
+		color: [150, 100, 20]
+	},
+	variants: ["Giant {}"],
+	min: 3,
+	max: 10
+}, {
+	visual: {
+		name: "Orc",
+		ch: "o",
+		color: [20, 150, 20]
+	},
+	variants: ["Large {}", "{} Leader"],
+	min: 5,
+	max: 12
+}, {
+	visual: {
+		name: "Ogre",
+		ch: "O",
+		color: [20, 20, 200]
+	},
+	variants: ["{} Magus", "{} King"],
+	min: 6,
+	max: 14
+}, {
+	visual: {
+		name: "Carnivorous gelatine",
+		ch: "j",
+		color: [240, 20, 240]
+	},
+	min: 5,
+	max: 20
+}, {
+	visual: {
+		name: "Beetle",
+		ch: "i"
+	},
+	variants: ["Large {}"],
+	min: 5,
+	max: 15
+}, {
+	visual: {
+		name: "Lizard",
+		ch: "l"
+	},
+	variants: ["Large {}"],
+	min: 5,
+	max: 15
+}, {
+	visual: {
+		name: "Elemental",
+		ch: "e"
+	},
+	variants: ["Large {}"],
+	min: 10,
+	max: 20
+}, {
+	visual: {
+		name: "Dragon",
+		ch: "D",
+		color: [250, 230, 20]
+	},
+	min: 12
+}, {
+	visual: {
+		name: "Dragon",
+		ch: "D"
+	},
+	min: 12
+}, {
+	visual: {
+		name: "Hydra",
+		ch: "H",
+		color: [200, 150, 20]
+	},
+	min: 15
+}];
 "use strict";
 
 /**
  * @param {int} depth
- * @param {int[2]} size
+ * @param {int} count
  * @param {string} intro Introduction HTML
  * @param {string} [element] For element-specific levels
  */
-var Level = function Level(depth, size, intro, element) {
+var Level = function Level(depth, count, intro, element) {
 	this._depth = depth;
-	this._size = size;
+
+	if (count <= 3) {
+		this._size = [count, 1];
+	} else if (count <= 6) {
+		this._size = [count / 2, 2];
+	} else {
+		this._size = [3, 3];
+	}
 	this._size[1]++; // room for the intro cell
 
 	this._cells = [];
@@ -511,10 +630,9 @@ var Level = function Level(depth, size, intro, element) {
 		intro: document.createElement("div")
 	};
 
-	var count = this._size[0] * (this._size[1] - 1);
 	for (var i = 0; i < count; i++) {
 		var entity = Entity.create(depth, element);
-		var cell = new Cell(this, entity);
+		var cell = new Cell(this, entity, i);
 		this._cells.push(cell);
 	}
 
@@ -526,26 +644,30 @@ Level.create = function (depth) {
 	/**
   * General level contents:
   *     1. one goblin
-  *     2:  ?
-  *     3: 
+  *     2: two monsters with attack types
+  *     3: two monsters, leveling up
+  *     4: elemental level
   *  7n-2: shops
-  *    4n: elemental
+  *  5n-1: elemental
   *    3+: with "P.S." in intro
-  * 
-  * Level sizes:
-  *     1. 1x1
-  *     2. 2x1
-  *     3. 3x1
   */
 
 	var intro = this._createIntro(depth);
-	return new this(depth, [1, 1], intro);
+	var count = Rules.getEntityCount(depth);
+	var element = null;
+
+	if (Rules.isLevelElemental(depth)) {
+		element = Object.keys(Elements).random();
+	}
+	return new this(depth, count, intro, element);
 };
 
 Level.data = {
 	fontSize: 24,
 	lineHeight: 1,
-	fontFamily: "serif"
+	fontFamily: "serif",
+	elementalAnnounced: false,
+	shopAnnounced: false
 };
 
 Level.prototype = {
@@ -769,16 +891,26 @@ Level._createIntro = function (depth) {
 	var intro = "";
 
 	if (depth == 1) {
-		intro = "<p>welcome to the prison. As you might have already noticed, \n\t\tall our cells are full. You really need to take care of that.</p>";
+		intro = "<p>welcome to the prison. As you might have already noticed, \n\t\tall our cells are full. You really need to take fix that.</p>\n\t\t<p>This first level has just one cell. Taking care about that goblin\n\t\tthere shall be an easy task. Just press the <strong>↓</strong> \n\t\t(or <strong>s</strong>) key to move around and do what you must.</p>\n\t\t<p>By the way: you will see your own stats below each enemy.</p>\n\t\t";
+	} else if (depth == 2) {
+		intro = "<p>good job! Welcome to prison level " + depth + ". The cells \n\t\there are full as well. \n\t\t<p>You can now pick from multiple ways to deal with your enemies.\n\t\tAlso, this level has two cells and both need to be cleared. \n\t\tTo move around, use <strong>←→↑↓</strong> or \n\t\t<strong>WASD</strong> or <strong>HJKL</strong> keys.</p>\n\t\t";
 	} else {
 		intro = "<p>welcome to prison level " + depth + ". All the cells are full.</p>";
 	}
 
-	// FIXME level 3 => levelup
+	if (depth == 3) {
+		intro = "" + intro + "<p>Levelup FIXME</p>\n\t\t<p>As you descend deeper, the number of cells will increase. \n\t\tThey can be also located in multiple rows.</p> \n\t\t";
+	} else if (Rules.isLevelElemental(depth) && !this.data.elementalAnnounced) {
+		this.data.elementalAnnounced = true;
+		intro = "" + intro + "<p>Elemental FIXME</p>";
+	} else if (Rules.isLevelShop(depth) && !this.data.shopAnnounced) {
+		this.data.shopAnnounced = true;
+		intro = "" + intro + "<p>Shop FIXME</p>";
+	}
 
 	intro = "" + intro + "<p class=\"sign\">Yours,<br/>O.</p>";
 
-	if (depth >= 1) {
+	if (depth >= 3) {
 		var ps = Level._ps;
 		intro = "" + intro + "<p class=\"ps\">P.S. They say that " + ps[depth % ps.length] + ".</p>";
 	}
@@ -786,7 +918,7 @@ Level._createIntro = function (depth) {
 	return "<p>Warden,</p>" + intro;
 };
 
-Level._ps = ["trapped chests are dangerous", "trapped chests are cool", "eating lutefisk is risky", "elemental resistance is important", "elemental resistance is useless", "fire fox is stronger than goo gel", "goo gel is stronger than fire fox", "you should not trust people", "deeper cells have tougher enemies", "there is no way out of this prison", "being a Warden is cool", "being a Warden is risky"].randomize();
+Level._ps = ["trapped chests are dangerous", "trapped chests are cool", "eating lutefisk is risky", "elemental resistance is important", "elemental resistance is useless", "fire fox is stronger than goo gel", "goo gel is stronger than fire fox", "you should not trust people", "deeper cells have tougher enemies", "there is no way out of this prison", "being a Warden is cool", "being a Warden is risky", "captured goldfish may give you a wish"].randomize();
 "use strict";
 
 var PC = function PC() {
@@ -837,7 +969,7 @@ Gauge.prototype = {
 	_build: function _build() {
 		var conf = this._conf;
 		this._node.classList.add("gauge");
-		this._node.style.backgroundColor = conf.color;
+		this._node.style.backgroundColor = ROT.Color.toRGB(conf.color);
 
 		if (conf.newValue < conf.min) {
 			this._node.classList.add("underflow");
@@ -958,19 +1090,25 @@ Chest.prototype.computeOutcome = function (id) {
 };
 "use strict";
 
-var Trap = function Trap(depth) {
-	this._depth = depth;
+var Trap = function Trap(depth, color, name) {
 	this._damage = Rules.getTrapDamage(depth);
 
-	var hsl = [ROT.RNG.getUniform(), 1, 1];
-	var rgb = ROT.Color.hsl2rgb(hsl);
-	var name = "Trap";
-	Entity.call(this, { ch: "%", color: rgb, name: name }); // FIXME char, FIXME types
+	Entity.call(this, { ch: "^", color: color, name: name });
 };
 Trap.prototype = Object.create(Entity.prototype);
 
 Trap.create = function (depth, element) {
-	return new this(depth);
+	if (element) {
+		var def = this.ALL.filter(function (def) {
+			return def.element == element;
+		})[0];
+	} else {
+		var def = this.ALL.random();
+	}
+
+	var color = def.element ? Elements[def.element].color : def.color;
+
+	return new this(depth, color, def.name);
 };
 
 Trap.prototype.getAttacks = function () {
@@ -990,6 +1128,24 @@ Trap.prototype.computeOutcome = function (id) {
 
 	return result;
 };
+
+Trap.ALL = [{
+	name: "Fireball trap",
+	element: "fire"
+}, {
+	name: "Splash trap",
+	element: "water"
+}, {
+	name: "Poison dart",
+	element: "poison" }, {
+	name: "Hidden spikes",
+	color: [150, 150, 150]
+}, {
+	name: "Falling rock trap",
+	color: [80, 80, 80] }, {
+	name: "Bear trap",
+	color: [100, 80, 40]
+}];
 "use strict";
 
 var Rules = {
@@ -1005,8 +1161,35 @@ var Rules = {
 		return depth;
 	},
 
+	getEntityCount: function getEntityCount(depth) {
+		if (this.isLevelShop(depth)) {
+			return 3;
+		} else if (depth <= 2) {
+			return depth;
+		} else if (depth <= 5) {
+			return 3;
+		} else if (depth <= 10) {
+			return 6;
+		} else {
+			return 9;
+		}
+	},
+
+	getBeingDifficulty: function getBeingDifficulty(depth) {
+		return depth;
+	},
+
 	isChestTrapped: function isChestTrapped(depth) {
 		return ROT.RNG.getUniform() > 0.5;
+	},
+
+	isLevelShop: function isLevelShop(depth) {
+		return depth % 7 == 5;
+	},
+
+	isLevelElemental: function isLevelElemental(depth) {
+		return true;
+		return depth % 5 == 4;
 	}
 };
 "use strict";
@@ -1026,7 +1209,7 @@ var Game = function Game() {
 
 Game.prototype = {
 	nextLevel: function nextLevel() {
-		var depth = this._level ? this._level.getDepth() : 1;
+		var depth = this._level ? this._level.getDepth() : 0;
 		depth++;
 
 		var w = window.innerWidth;

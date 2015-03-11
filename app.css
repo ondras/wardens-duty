@@ -6,7 +6,7 @@
 .level .intro {
   margin: 4rem 8rem 0;
   padding: 2rem;
-  background-color: #000;
+  background-color: rgba(0, 0, 0, 0.7);
 }
 .level .intro .sign {
   text-align: right;
@@ -22,7 +22,7 @@
 .cell .info {
   position: relative;
   height: 50%;
-  background-color: #000000;
+  background-color: rgba(0, 0, 0, 0.7);
   /* .attacks */
 }
 .cell .info .label {
@@ -63,7 +63,7 @@
   opacity: 0.5;
 }
 .cell .info .attacks ul li.active {
-  background-color: #333;
+  xbackground-color: #333;
 }
 .cell .info .attacks ul li .confirm {
   margin-left: 4ch;
@@ -94,7 +94,7 @@
 .entity span {
   font-size: 12rem;
   font-weight: bold;
-  background-color: #000000;
+  background-color: rgba(0, 0, 0, 0.7);
   display: inline-block;
   border-radius: 0.3em 0.3em 0 0;
   padding: 1rem;
@@ -181,7 +181,7 @@ body {
   text-align: center;
 }
 #outro {
-  background-color: #000000;
+  background-color: rgba(0, 0, 0, 0.7);
 }
 #outro h1 {
   text-align: center;
