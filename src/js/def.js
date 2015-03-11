@@ -1,21 +1,3 @@
-var Attacks = {
-	"melee": {
-
-	},
-
-	"ranged": {
-
-	},
-
-	"buy": {
-
-	},
-
-	"cancel": {
-
-	}
-}
-
 var Stats = {
 	"hp": {
 		label: "Health",
@@ -71,9 +53,5 @@ Object.keys(Elements).forEach(key => {
 	Stats[`res-${key}`] = {
 		label: `${Elements[key].label} resistance`,
 		def: 0
-	}
-
-	Attacks[`elemental-${key}`] = {
-
 	}
 });

@@ -1,22 +1,26 @@
 - content
   - beings
   - traps
-  - chests
   - shopkeepers
   - two more attributes
-  - intro
   - per-level intros
-  - outro
-  - sharing
+  - ps texts
+  
 
 - logic
   - xp levels
   - leveling
   - being generator
   - thematic levels
+  - rules
+    - chances
+    - chest gold
+    - trap damange
+    
 
 - ui
   - polishing
   - variable textures
   - lighting
   - nav arrows
+  - level transition

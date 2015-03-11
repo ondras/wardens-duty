@@ -197,6 +197,9 @@ body {
   text-decoration: none;
   text-align: center;
 }
+#outro a:hover {
+  text-decoration: underline;
+}
 #outro a span {
   display: inline-block;
   width: 3em;
@@ -211,4 +214,7 @@ body {
 }
 #outro a.fb span {
   background-color: #3B5998;
+}
+#outro strong {
+  color: #fff;
 }

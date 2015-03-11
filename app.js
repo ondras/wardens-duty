@@ -1,15 +1,5 @@
 "use strict";
 
-var Attacks = {
-	melee: {},
-
-	ranged: {},
-
-	buy: {},
-
-	cancel: {}
-};
-
 var Stats = {
 	hp: {
 		label: "Health",
@@ -66,8 +56,6 @@ Object.keys(Elements).forEach(function (key) {
 		label: "" + Elements[key].label + " resistance",
 		def: 0
 	};
-
-	Attacks["elemental-" + key] = {};
 });
 "use strict";
 
@@ -339,9 +327,19 @@ var Entity = function Entity() {
 	this._visual = visual;
 };
 
-Entity.create = function (depth, element) {
+Entity.create = function (depth, element, index) {
 	/* FIXME shopeepers, traps, chests, more?? */
-	return Being.create(depth, element);
+
+	if (depth == 1) {
+		return Being.create(depth, element);
+	} else if (false) {} else {
+		var types = {
+			//			"Being": 1,
+			Chest: 1
+		};
+		var type = ROT.RNG.getWeightedValue(types);
+		return window[type].create(depth, element);
+	}
 };
 
 Entity.prototype = {
@@ -363,6 +361,7 @@ Entity.prototype = {
 		}
 	}
 };
+/* FIXME shop */
 "use strict";
 
 var Being = function Being(difficulty, visual) {
@@ -473,7 +472,7 @@ Being.ALL = {
 	rat: {
 		visual: {
 			name: "Rat",
-			ch: "g",
+			ch: "r",
 			color: [150, 100, 20]
 		},
 		variants: ["Giant {}"],
@@ -524,12 +523,18 @@ var Level = function Level(depth, size, intro, element) {
 
 Level.create = function (depth) {
 	/**
-  * General level layout:
+  * General level contents:
   *     1. one goblin
   *     2:  ?
+  *     3: 
   *  7n-2: shops
   *    4n: elemental
   *    3+: with "P.S." in intro
+  * 
+  * Level sizes:
+  *     1. 1x1
+  *     2. 2x1
+  *     3. 3x1
   */
 
 	var intro = this._createIntro(depth);
@@ -768,6 +773,8 @@ Level._createIntro = function (depth) {
 		intro = "<p>welcome to prison level " + depth + ". All the cells are full.</p>";
 	}
 
+	// FIXME level 3 => levelup
+
 	intro = "" + intro + "<p class=\"sign\">Yours,<br/>O.</p>";
 
 	if (depth >= 1) {
@@ -778,7 +785,7 @@ Level._createIntro = function (depth) {
 	return "<p>Warden,</p>" + intro;
 };
 
-Level._ps = ["aaa", "bbb", "ccc"].randomize();
+Level._ps = ["trapped chests are dangerous", "trapped chests are cool", "eating lutefisk is risky", "elemental resistance is important", "elemental resistance is useless", "fire fox is stronger than goo gel", "goo gel is stronger than fire fox", "you should not trust people", "deeper cells have tougher enemies", "there is no way out of this prison", "being a Warden is cool", "being a Warden is risky"].randomize();
 "use strict";
 
 var PC = function PC() {
@@ -901,6 +908,52 @@ Gauge.prototype = {
 };
 "use strict";
 
+var Chest = function Chest(depth) {
+	this._depth = depth;
+	this._trapped = ROT.RNG.getUniform() > 0.5;
+	var name = "T" + (this._trapped ? "rapped t" : "") + "reasure chest";
+	Entity.call(this, { ch: "$", color: [250, 230, 20], name: name });
+};
+Chest.prototype = Object.create(Entity.prototype);
+
+Chest.create = function (depth, element) {
+	return new this(depth);
+};
+
+Chest.prototype.getAttacks = function () {
+	var results = [];
+
+	results.push({
+		id: "open",
+		label: "Open the chest"
+	});
+
+	results.push({
+		id: "ignore",
+		label: "Ignore the chest"
+	});
+
+	return results;
+};
+
+Chest.prototype.computeOutcome = function (id) {
+	var result = {};
+	switch (id) {
+		case "ignore":
+			break;
+
+		case "open":
+			result.gold = this._depth; // FIXME
+			if (this._trapped) {
+				result.hp = Math.round(-this._depth);
+			} // FIXME
+			break;
+	}
+
+	return result;
+};
+"use strict";
+
 var Game = function Game() {
 	this._dom = {
 		intro: document.createElement("div"),
@@ -916,7 +969,7 @@ var Game = function Game() {
 
 Game.prototype = {
 	nextLevel: function nextLevel() {
-		var depth = this._level ? this._level.getDepth() : 0;
+		var depth = this._level ? this._level.getDepth() : 1;
 		depth++;
 
 		var w = window.innerWidth;
@@ -930,10 +983,13 @@ Game.prototype = {
 	over: function over() {
 		window.addEventListener("keydown", this);
 
+		var depth = this._level.getDepth();
+		var url = encodeURIComponent(location.href);
+		var status = encodeURIComponent("I got to level " + depth + " at Warden's Duty! " + location.href);
+
 		var node = this._dom.outro;
 		node.id = "outro";
-		var depth = this._level.getDepth();
-		node.innerHTML = "<h1>Game over</h1>\n\t\t\t<p>You are unable to continue your duty. All the vicious\n\t\t\tcritters locked inside cells are too hard to defeat \n\t\t\tand the game is over.</p>\n\n\t\t\t<p>On the other hand, you did a fine job cleaning the \n\t\t\tprison up. Many cells are now free and you managed to descend\n\t\t\tto level " + depth + ". Click the icons below to share your \n\t\t\tscore!</p>\n\t\t\t\n\t\t\t<a class=\"twitter\">\n\t\t\t\t<span>t</span>\n\t\t\t\t<br/>Twitter\n\t\t\t</a>\n\n\t\t\t<a class=\"gplus\">\n\t\t\t\t<span>g+</span>\n\t\t\t\t<br/>Google Plus\n\t\t\t</a>\n\t\t\t\n\t\t\t<a class=\"fb\">\n\t\t\t\t<span>f</span>\n\t\t\t\t<br/>Facebook\n\t\t\t</a>\n\n\t\t\t<p>Press <strong>Enter</strong> to play again!</p>\n\t\t";
+		node.innerHTML = "<h1>Game over</h1>\n\t\t\t<p>You are unable to continue your duty. All the vicious\n\t\t\tcritters locked inside cells are too hard to defeat \n\t\t\tand the game is over.</p>\n\n\t\t\t<p>On the other hand, you did a fine job cleaning the \n\t\t\tprison up. Many cells are now free and you managed to descend\n\t\t\tto level " + depth + ". Click the icons below to share your \n\t\t\tscore!</p>\n\t\t\t\n\t\t\t<a class=\"twitter\" href=\"https://twitter.com/home?status=" + status + "\">\n\t\t\t\t<span>t</span>\n\t\t\t\t<br/>Twitter\n\t\t\t</a>\n\n\t\t\t<a class=\"gplus\" href=\"https://plus.google.com/share?url=" + url + "\">\n\t\t\t\t<span>g+</span>\n\t\t\t\t<br/>Google Plus\n\t\t\t</a>\n\t\t\t\n\t\t\t<a class=\"fb\" href=\"https://www.facebook.com/sharer/sharer.php?u={$url}\">\n\t\t\t\t<span>f</span>\n\t\t\t\t<br/>Facebook\n\t\t\t</a>\n\n\t\t\t<p>Press <strong>Enter</strong> to play again!</p>\n\t\t";
 		/* FIXME outro */
 		node.classList.add("transparent");
 		document.body.appendChild(node);
@@ -986,13 +1042,10 @@ Game.prototype = {
 		var node = this._dom.intro;
 		node.id = "intro";
 
-		node.innerHTML = "<h1>Warden's Duty</h1>\n\t\t\t<p>The game you are about to play is a 7DRL. It was created \n\t\t\tin a limited time, might exhibit strange bugs and some \n\t\t\tsay it contains <em>roguelike</em> (‽) elements. \n\t\t\tYou will encounter goblins, rats, dragons, pangolins and \n\t\t\tmaybe even a lutefisk.\n\t\t\t<a href=\"https://www.youtube.com/watch?v=6dNAbb7vKjY\">Be prepared.</a></p>\n\t\t\t\n\t\t\t<p>Warden't Duty was created by \n\t\t\t<a href=\"http://ondras.zarovi.cz/\">Ondřej Žára</a> and the \n\t\t\tcomplete source code is available on\n\t\t\t<a href=\"https://github.com/ondras/wardens-duty\">GitHub</a>.\n\t\t\tIf you find the game's layout broken, try adjusting your window\n\t\t\tto be more \"widescreen\", i.e. considerably wider than it is tall.</p>\n\t\t\t\n\t\t\t<p>To start the game, please press <strong>Enter</strong>.</p> \n\t\t";
+		node.innerHTML = "<h1>Warden's Duty</h1>\n\t\t\t<p>The game you are about to play is a 7DRL. It was created \n\t\t\tin a limited time, might exhibit strange bugs and some \n\t\t\tsay it contains <em>roguelike</em> (‽) elements. \n\t\t\tYou will encounter goblins, rats, dragons, pangolins and \n\t\t\tmaybe even a lutefisk.\n\t\t\t<a href=\"https://www.youtube.com/watch?v=6dNAbb7vKjY\">Be prepared.</a></p>\n\t\t\t\n\t\t\t<p>Warden't Duty was created by \n\t\t\t<a href=\"http://ondras.zarovi.cz/\">Ondřej Žára</a> and the \n\t\t\tcomplete source code is available on\n\t\t\t<a href=\"https://github.com/ondras/wardens-duty\">GitHub</a>.\n\t\t\tIf you find the game's layout broken, try adjusting your window\n\t\t\tto be more <em>widescreen</em>, i.e. considerably wider than it is tall.</p>\n\t\t\t\n\t\t\t<p>To start the game, please press <strong>Enter</strong>.</p> \n\t\t";
 		document.body.appendChild(node);
 
 		window.addEventListener("keydown", this);
-
-		this.nextLevel();
-		this.over();
 	}
 };
 

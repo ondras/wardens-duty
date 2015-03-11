@@ -13,7 +13,7 @@ var Game = function() {
 
 Game.prototype = {
 	nextLevel() {
-		var depth = (this._level ? this._level.getDepth() : 0);
+		var depth = (this._level ? this._level.getDepth() : 1);
 		depth++;
 		
 		var w = window.innerWidth;
@@ -27,9 +27,12 @@ Game.prototype = {
 	over() {
 		window.addEventListener("keydown", this);
 		
+		var depth = this._level.getDepth();
+		var url = encodeURIComponent(location.href);
+		var status = encodeURIComponent(`I got to level ${depth} at Warden's Duty! ${location.href}`);
+
 		var node = this._dom.outro;
 		node.id = "outro";
-		var depth = this._level.getDepth();
 		node.innerHTML = `<h1>Game over</h1>
 			<p>You are unable to continue your duty. All the vicious
 			critters locked inside cells are too hard to defeat 
@@ -40,17 +43,17 @@ Game.prototype = {
 			to level ${depth}. Click the icons below to share your 
 			score!</p>
 			
-			<a class="twitter">
+			<a class="twitter" href="https://twitter.com/home?status=${status}">
 				<span>t</span>
 				<br/>Twitter
 			</a>
 
-			<a class="gplus">
+			<a class="gplus" href="https://plus.google.com/share?url=${url}">
 				<span>g+</span>
 				<br/>Google Plus
 			</a>
 			
-			<a class="fb">
+			<a class="fb" href="https://www.facebook.com/sharer/sharer.php?u={$url}">
 				<span>f</span>
 				<br/>Facebook
 			</a>
@@ -118,16 +121,13 @@ Game.prototype = {
 			complete source code is available on
 			<a href="https://github.com/ondras/wardens-duty">GitHub</a>.
 			If you find the game's layout broken, try adjusting your window
-			to be more "widescreen", i.e. considerably wider than it is tall.</p>
+			to be more <em>widescreen</em>, i.e. considerably wider than it is tall.</p>
 			
 			<p>To start the game, please press <strong>Enter</strong>.</p> 
 		`;
 		document.body.appendChild(node);
 		
 		window.addEventListener("keydown", this);
-		
-		this.nextLevel();
-		this.over();
 	}
 }
 

@@ -2,9 +2,20 @@ var Entity = function(visual = {ch:"?", color:"#fff", name:""}) {
 	this._visual = visual;
 }
 
-Entity.create = function(depth, element) {
+Entity.create = function(depth, element, index) {
 	/* FIXME shopeepers, traps, chests, more?? */
-	return Being.create(depth, element);
+	
+	if (depth == 1) {
+		return Being.create(depth, element);
+	} else if (false) { /* FIXME shop */
+	} else {
+		var types = {
+//			"Being": 1,
+			"Chest": 1
+		}
+		var type = ROT.RNG.getWeightedValue(types);
+		return window[type].create(depth, element);
+	}
 }
 
 Entity.prototype = {

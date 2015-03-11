@@ -31,12 +31,18 @@ var Level = function(depth, size, intro, element) {
 
 Level.create = function(depth) {
 	/**
-	 * General level layout:
+	 * General level contents:
 	 *     1. one goblin
 	 *     2:  ?
+	 *     3: 
 	 *  7n-2: shops
 	 *    4n: elemental
 	 *    3+: with "P.S." in intro
+	 * 
+	 * Level sizes:
+	 *     1. 1x1
+	 *     2. 2x1
+	 *     3. 3x1
 	 */
 
 	var intro = this._createIntro(depth);
@@ -249,6 +255,8 @@ Level._createIntro = function(depth) {
 		intro = `<p>welcome to prison level ${depth}. All the cells are full.</p>`
 	}
 	
+	// FIXME level 3 => levelup
+	
 	intro = `${intro}<p class="sign">Yours,<br/>O.</p>`;
 	
 	if (depth >= 1) {
@@ -260,7 +268,16 @@ Level._createIntro = function(depth) {
 }
 
 Level._ps = [
-	"aaa",
-	"bbb",
-	"ccc"
+	"trapped chests are dangerous",
+	"trapped chests are cool",
+	"eating lutefisk is risky",
+	"elemental resistance is important",
+	"elemental resistance is useless",
+	"fire fox is stronger than goo gel",
+	"goo gel is stronger than fire fox",
+	"you should not trust people",
+	"deeper cells have tougher enemies",
+	"there is no way out of this prison",
+	"being a Warden is cool",
+	"being a Warden is risky"
 ].randomize();

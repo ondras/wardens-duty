@@ -101,7 +101,7 @@ Being.ALL = {
 	"rat": {
 		visual: {
 			name: "Rat",
-			ch: "g",
+			ch: "r",
 			color: [150, 100, 20]
 		},
 		variants: ["Giant {}"],
