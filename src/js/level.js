@@ -72,15 +72,17 @@ Level.prototype = {
 
 		this._activateCell(0, 0);
 		this.resize(w, h);
-		document.body.appendChild(this._dom.node);
+		document.body.insertBefore(this._dom.node, document.body.firstChild);
 	},
 
 	deactivate() {
 		window.removeEventListener("keypress", this);
 		window.removeEventListener("keydown", this);
 
-		this._dom.node.parentNode.removeChild(this._dom.node);
+		this._dom.node.classList.add("done");
 		this._cells.forEach(cell => cell.deactivate());
+
+		setTimeout(() => this._dom.node.parentElement.removeChild(this._dom.node), 1500);
 	},
 	
 	getDepth() {

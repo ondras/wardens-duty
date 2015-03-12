@@ -13,7 +13,7 @@ var Game = function() {
 
 Game.prototype = {
 	nextLevel() {
-		var depth = (this._level ? this._level.getDepth() : 3);
+		var depth = (this._level ? this._level.getDepth() : 0);
 		depth++;
 		
 		var w = window.innerWidth;
@@ -26,6 +26,7 @@ Game.prototype = {
 	
 	over() {
 		window.addEventListener("keydown", this);
+		this._level.deactivate();
 		
 		var depth = this._level.getDepth();
 		var url = encodeURIComponent(location.href);
@@ -60,13 +61,7 @@ Game.prototype = {
 
 			<p>Press <strong>Enter</strong> to play again!</p>
 		`;
-		/* FIXME outro */
-		node.classList.add("transparent");
-		document.body.appendChild(node);
-
-		setTimeout(() => {
-			node.classList.remove("transparent");
-		}, 0);
+		document.body.insertBefore(node, document.body.firstChild);
 	},
 	
 	handleEvent(e) {

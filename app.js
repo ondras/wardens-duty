@@ -756,17 +756,23 @@ Level.prototype = {
 
 		this._activateCell(0, 0);
 		this.resize(w, h);
-		document.body.appendChild(this._dom.node);
+		document.body.insertBefore(this._dom.node, document.body.firstChild);
 	},
 
 	deactivate: function deactivate() {
+		var _this = this;
+
 		window.removeEventListener("keypress", this);
 		window.removeEventListener("keydown", this);
 
-		this._dom.node.parentNode.removeChild(this._dom.node);
+		this._dom.node.classList.add("done");
 		this._cells.forEach(function (cell) {
 			return cell.deactivate();
 		});
+
+		setTimeout(function () {
+			return _this._dom.node.parentElement.removeChild(_this._dom.node);
+		}, 2000);
 	},
 
 	getDepth: function getDepth() {
@@ -1489,7 +1495,7 @@ var Game = function Game() {
 
 Game.prototype = {
 	nextLevel: function nextLevel() {
-		var depth = this._level ? this._level.getDepth() : 3;
+		var depth = this._level ? this._level.getDepth() : 0;
 		depth++;
 
 		var w = window.innerWidth;
@@ -1502,6 +1508,7 @@ Game.prototype = {
 
 	over: function over() {
 		window.addEventListener("keydown", this);
+		this._level.deactivate();
 
 		var depth = this._level.getDepth();
 		var url = encodeURIComponent(location.href);
@@ -1510,13 +1517,7 @@ Game.prototype = {
 		var node = this._dom.outro;
 		node.id = "outro";
 		node.innerHTML = "<h1>Game over</h1>\n\t\t\t<p>You are unable to continue your duty. All the vicious\n\t\t\tcritters locked inside cells are too hard to defeat \n\t\t\tand the game is over.</p>\n\n\t\t\t<p>On the other hand, you did a fine job cleaning the \n\t\t\tprison up. Many cells are now free and you managed to descend\n\t\t\tto level " + depth + ". Click the icons below to share your \n\t\t\tscore!</p>\n\t\t\t\n\t\t\t<a class=\"twitter\" href=\"https://twitter.com/home?status=" + status + "\">\n\t\t\t\t<span>t</span>\n\t\t\t\t<br/>Twitter\n\t\t\t</a>\n\n\t\t\t<a class=\"gplus\" href=\"https://plus.google.com/share?url=" + url + "\">\n\t\t\t\t<span>g+</span>\n\t\t\t\t<br/>Google Plus\n\t\t\t</a>\n\t\t\t\n\t\t\t<a class=\"fb\" href=\"https://www.facebook.com/sharer/sharer.php?u={$url}\">\n\t\t\t\t<span>f</span>\n\t\t\t\t<br/>Facebook\n\t\t\t</a>\n\n\t\t\t<p>Press <strong>Enter</strong> to play again!</p>\n\t\t";
-		/* FIXME outro */
-		node.classList.add("transparent");
-		document.body.appendChild(node);
-
-		setTimeout(function () {
-			node.classList.remove("transparent");
-		}, 0);
+		document.body.insertBefore(node, document.body.firstChild);
 	},
 
 	handleEvent: function handleEvent(e) {

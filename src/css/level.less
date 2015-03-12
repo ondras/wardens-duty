@@ -1,6 +1,6 @@
 .level {
 	position: absolute;
-	transition: left 500ms, top 500ms;
+	transition: left 500ms, top 500ms, opacity 1s;
 
 	.intro {
 		margin: 4rem 8rem 0;
@@ -15,5 +15,9 @@
 		.ps {
 			margin-top: 2em;
 		}
+	}
+
+	&.done {
+		opacity: 0;
 	}
 }
