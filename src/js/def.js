@@ -2,28 +2,28 @@ var Stats = {
 	"hp": {
 		label: "Health",
 		color: [50, 220, 50],
-		def: 50
+		def: 20
 	},
 	"maxhp": {
-		def: 100
+		def: 20
 	},
 	"mana": {
 		label: "Mana",
 		color: [50, 50, 220],
-		def: 100
+		def: 20
 	},
 	"maxmana": {
-		def: 100
+		def: 20
 	},
 	"strength": {
 		label: "Strength",
 		color: [50, 180, 100],
-		def: 10
+		def: 10 // max 100 reduces damage by half
 	},
 	"magic": {
 		label: "Magic affinity",
 		color: [100, 50, 180],
-		def: 10
+		def: 10 // max 100 reduces mana consumption by half
 	},
 	"gold": {
 		label: "Gold",
@@ -38,7 +38,7 @@ var Stats = {
 	"xp": {
 		label: "Experience",
 		color: [200, 50, 200],
-		def: 5
+		def: 0
 	}
 }
 
@@ -46,7 +46,7 @@ var Elements = {
 	"poison": {
 		label: "Poison",
 		color: [100, 160, 20],
-		def: 0
+		def: 0 // max 100 reduces damage by half
 	},
 
 	"fire": {

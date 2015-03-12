@@ -1,16 +1,16 @@
 - content
   - beings
-  - per-level intros
   - ps texts
   
 - logic
-  - xp levels
-  - leveling
   - achievements?
-  - minimap
   - review rules
   - better difficulty approach / being generation
+  - dismiss bude muset blokovat
     
 - ui
   - polishing
-  - minimap
+
+- features
+  - multiple beings in one cell
+

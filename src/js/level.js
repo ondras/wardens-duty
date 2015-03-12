@@ -6,7 +6,15 @@
  */
 var Level = function(depth, count, intro, element) {
 	this._depth = depth;
+	this._cells = [];
+	this._current = null;
+	this._texture = [];
 	
+	this._dom = {
+		node: document.createElement("div"),
+		intro: document.createElement("div")
+	}
+
 	if (count <= 3) {
 		this._size = [count, 1];
 	} else if (count <= 6) {
@@ -14,25 +22,24 @@ var Level = function(depth, count, intro, element) {
 	} else {
 		this._size = [3, 3];
 	}
-	this._size[1]++; // room for the intro cell
 
-	this._cells = [];
-	this._current = null;
-	this._texture = [];
-
-	this._dom = {
-		node: document.createElement("div"),
-		intro: document.createElement("div")
+	this._minimap = new Minimap(this._size[0], this._size[1]);
+	for (var j=0;j<this._size[1];j++) {
+		for (var i=0;i<this._size[0];i++) {
+			var cell = new Cell(this, [i, j], this._minimap);
+			this._cells.push(cell);
+		}
 	}
 
 	for (var i=0;i<count;i++) {
+		var cell = this._cells[i % this._cells.length];
 		var entity = Entity.create(depth, element);
-		var cell = new Cell(this, entity);
-		this._cells.push(cell);
+		cell.addEntity(entity);
 	}
 
+	this._size[1]++; // room for the intro cell
 	this._build(intro, element);
-	this.checkCells();
+	this.syncCells();
 }
 
 Level.create = function(depth) {
@@ -89,8 +96,11 @@ Level.prototype = {
 		return this._depth;
 	},
 
-	checkCells() {
+	syncCells() {
 		this._cells.forEach(cell => cell.syncAttacks());
+	},
+	
+	checkLevelOver() {
 		var doable = this._cells.some(cell => cell.isDoable() && !cell.isDone());
 		var done = this._cells.every(cell => cell.isDone());
 
@@ -192,6 +202,10 @@ Level.prototype = {
 		this._dom.intro.appendChild(intro);
 
 		this._cells.forEach(cell => this._dom.node.appendChild(cell.getNode()));
+		
+		if (this._depth >= 2) {
+			this._dom.node.appendChild(this._minimap.getNode());
+		}
 	},
 
 	_createTextureData(element) {
@@ -285,7 +299,9 @@ Level._createIntro = function(depth) {
 	}
 	
 	if (depth == 3) {
-		intro = `${intro}<p>FIXME levelup.</p>
+		intro = `${intro}<p>Keep an eye on your Experience bar. 
+		When it fills up, you gain an experience level -- do I really 
+		need to explain that in more detail?</p>
 		<p>As you descend deeper, the number of cells will increase. 
 		They can be also located in multiple rows.</p> 
 		`;

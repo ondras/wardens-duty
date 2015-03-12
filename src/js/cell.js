@@ -1,6 +1,9 @@
-var Cell = function(level, entity) {
+var Cell = function(level, position, minimap) {
 	this._level = level;
-	this._entity = entity;
+	this._position = position;
+	this._minimap = minimap;
+
+	this._entity = null;
 	this._current = 0;
 	this._done = false;
 	this._attacks = [];
@@ -13,23 +16,28 @@ var Cell = function(level, entity) {
 		gauges: document.createElement("div"),
 		confirm: document.createElement("div")
 	}
-
-	this._build();
 }
 
 Cell.prototype = {
 	activate() {
 		window.addEventListener("keypress", this);
 		window.addEventListener("keydown", this);
+		this._minimap.focus(this._position[0], this._position[1]);
 	},
 
 	deactivate() {
 		window.removeEventListener("keypress", this);
 		window.removeEventListener("keydown", this);
+		this._minimap.blur(this._position[0], this._position[1]);
 	},
 
 	getNode() {
 		return this._dom.node;
+	},
+	
+	addEntity(entity) {
+		this._entity = entity;
+		this._build();
 	},
 
 	resize(w, h) {
@@ -99,6 +107,8 @@ Cell.prototype = {
 		this._dom.entity.appendChild(ch);
 		this._dom.node.appendChild(this._dom.entity);
 
+		this._minimap.set(this._position[0], this._position[1], visual.ch, ch.style.color);
+
 		/* label */
 		var label = document.createElement("div");
 		label.classList.add("label");
@@ -120,15 +130,21 @@ Cell.prototype = {
 			newValue: this._getNewValue(stats, outcome, type)
 		};
 		
-		/* FIXME xp threshold */
 		if (type == "hp") {
 			conf.max = this._getNewValue(stats, outcome, "maxhp");
 		} else if (type == "mana") {
 			conf.max = this._getNewValue(stats, outcome, "maxmana");
-		} else if (type == "ammo" || type == "gold" || type in Elements) {
+		} else if (type == "ammo" || type == "gold") {
 			var oldValue = stats[type];
 			var newValue = this._getNewValue(stats, outcome, type);
 			conf.max = Math.max(oldValue, newValue);
+		} else if (type == "xp") {
+			var range = Rules.getXpRange(stats[type]);
+			var newValue = this._getNewValue(stats, outcome, type);
+			conf.min = range[0];
+			conf.max = Math.max(range[1], newValue);
+		} else if (type in Elements) {
+			conf.max = 100;
 		}
 		
 		var gauge = new Gauge(conf);
@@ -218,13 +234,16 @@ Cell.prototype = {
 	},
 	
 	_doAttack() {
-		this._dom.info.classList.add("done");
-		this._dom.entity.querySelector("span").style.color = "#000";
-
 		var id = this._attacks[this._current].id;
 		var result = this._entity.doAttack(id);
 
 		this._done = true;
+		this._level.syncCells();
+
+		this._dom.info.classList.add("done");
+		this._dom.entity.querySelector("span").style.color = "#000";
+		this._minimap.set(this._position[0], this._position[1], "", "");
+
 		if (result) { /* we need to show this text and wait for a confirmation */
 			this._dom.info.innerHTML = `${result}<p>Press <strong>Enter</strong> to dismiss this message.</p>`;
 		} else { /* pass control back to level */
@@ -234,7 +253,6 @@ Cell.prototype = {
 
 	_finalize() {
 		this._dom.info.innerHTML = "";
-		this.deactivate();
-		this._level.checkCells();
+		this._level.checkLevelOver();
 	}
 }

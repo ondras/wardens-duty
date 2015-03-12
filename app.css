@@ -1,7 +1,10 @@
 @import url(http://fonts.googleapis.com/css?family=Inconsolata);
 .level {
   position: absolute;
-  transition: left 500ms, top 500ms, opacity 1.5s;
+  transition: left 500ms, top 500ms, opacity 1s;
+}
+.level.done {
+  opacity: 0;
 }
 .level .intro {
   margin: 4rem 8rem 0;
@@ -15,8 +18,24 @@
 .level .intro .ps {
   margin-top: 2em;
 }
-.level.done {
-  opacity: 0;
+.level .minimap {
+  position: fixed;
+  right: 0.5em;
+  top: 0.5em;
+  background-color: rgba(0, 0, 0, 0.75);
+  border-collapse: collapse;
+}
+.level .minimap td {
+  width: 1.4em;
+  height: 1.2em;
+  font-weight: bold;
+  line-height: 1.2;
+  text-align: center;
+  border: 2px solid #666;
+  padding: 0;
+}
+.level .minimap td.active {
+  background-color: #333;
 }
 .cell {
   position: absolute;

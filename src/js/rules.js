@@ -17,7 +17,7 @@ var Rules = {
 	isLevelElemental(depth) {
 		return ((depth % 5) == 4);
 	},
-
+	
 	getEntityCount(depth) { /* FIXME */
 		if (this.isLevelShop(depth)) {
 			return 3;
@@ -72,7 +72,7 @@ var Rules = {
 	/* = Elemental stuff = */
 
 	getResistanceGain() {
-		return 5;
+		return 3;
 	},
 
 	getElementalPenalty() {
@@ -103,5 +103,33 @@ var Rules = {
 
 	getAmmoCost() {
 		return 15;
+	},
+	
+	/* = Leveling up = */
+
+	getXpRange(xp) {
+		if (xp < 10) { return [0, 10]; }
+
+		/* 10, 20, 40, 80, ... */
+		
+		var base = Math.log(xp/10)/Math.LN2;
+		base = Math.floor(base);
+		return [
+			10*Math.pow(2, base),
+			10*Math.pow(2, base+1)
+		];
+	},
+
+	getLevelResistance() {
+		return 2;
+	},
+
+	getLevelSkill() {
+		return 2;
+	},
+
+	getLevelStat() {
+		return 1.1;
 	}
+
 }

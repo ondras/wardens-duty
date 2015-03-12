@@ -101,7 +101,7 @@ Being.prototype.computeOutcome = function(attack) {
 	outcome["gold"] = this._gold;
 	
 	if (this._element) {
-		outcome[`res-${this._element}`] = Rules.getResistanceGain();
+		outcome[this._element] = Rules.getResistanceGain();
 	}
 
 	switch (attack) {

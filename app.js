@@ -4,28 +4,28 @@ var Stats = {
 	hp: {
 		label: "Health",
 		color: [50, 220, 50],
-		def: 50
+		def: 20
 	},
 	maxhp: {
-		def: 100
+		def: 20
 	},
 	mana: {
 		label: "Mana",
 		color: [50, 50, 220],
-		def: 100
+		def: 20
 	},
 	maxmana: {
-		def: 100
+		def: 20
 	},
 	strength: {
 		label: "Strength",
 		color: [50, 180, 100],
-		def: 10
+		def: 10 // max 100 reduces damage by half
 	},
 	magic: {
 		label: "Magic affinity",
 		color: [100, 50, 180],
-		def: 10
+		def: 10 // max 100 reduces mana consumption by half
 	},
 	gold: {
 		label: "Gold",
@@ -40,7 +40,7 @@ var Stats = {
 	xp: {
 		label: "Experience",
 		color: [200, 50, 200],
-		def: 5
+		def: 0
 	}
 };
 
@@ -48,7 +48,7 @@ var Elements = {
 	poison: {
 		label: "Poison",
 		color: [100, 160, 20],
-		def: 0
+		def: 0 // max 100 reduces damage by half
 	},
 
 	fire: {
@@ -73,9 +73,12 @@ Object.keys(Elements).forEach(function (key) {
 });
 "use strict";
 
-var Cell = function Cell(level, entity) {
+var Cell = function Cell(level, position, minimap) {
 	this._level = level;
-	this._entity = entity;
+	this._position = position;
+	this._minimap = minimap;
+
+	this._entity = null;
 	this._current = 0;
 	this._done = false;
 	this._attacks = [];
@@ -88,23 +91,28 @@ var Cell = function Cell(level, entity) {
 		gauges: document.createElement("div"),
 		confirm: document.createElement("div")
 	};
-
-	this._build();
 };
 
 Cell.prototype = {
 	activate: function activate() {
 		window.addEventListener("keypress", this);
 		window.addEventListener("keydown", this);
+		this._minimap.focus(this._position[0], this._position[1]);
 	},
 
 	deactivate: function deactivate() {
 		window.removeEventListener("keypress", this);
 		window.removeEventListener("keydown", this);
+		this._minimap.blur(this._position[0], this._position[1]);
 	},
 
 	getNode: function getNode() {
 		return this._dom.node;
+	},
+
+	addEntity: function addEntity(entity) {
+		this._entity = entity;
+		this._build();
 	},
 
 	resize: function resize(w, h) {
@@ -185,6 +193,8 @@ Cell.prototype = {
 		this._dom.entity.appendChild(ch);
 		this._dom.node.appendChild(this._dom.entity);
 
+		this._minimap.set(this._position[0], this._position[1], visual.ch, ch.style.color);
+
 		/* label */
 		var label = document.createElement("div");
 		label.classList.add("label");
@@ -206,15 +216,21 @@ Cell.prototype = {
 			newValue: this._getNewValue(stats, outcome, type)
 		};
 
-		/* FIXME xp threshold */
 		if (type == "hp") {
 			conf.max = this._getNewValue(stats, outcome, "maxhp");
 		} else if (type == "mana") {
 			conf.max = this._getNewValue(stats, outcome, "maxmana");
-		} else if (type == "ammo" || type == "gold" || type in Elements) {
+		} else if (type == "ammo" || type == "gold") {
 			var oldValue = stats[type];
 			var newValue = this._getNewValue(stats, outcome, type);
 			conf.max = Math.max(oldValue, newValue);
+		} else if (type == "xp") {
+			var range = Rules.getXpRange(stats[type]);
+			var newValue = this._getNewValue(stats, outcome, type);
+			conf.min = range[0];
+			conf.max = Math.max(range[1], newValue);
+		} else if (type in Elements) {
+			conf.max = 100;
 		}
 
 		var gauge = new Gauge(conf);
@@ -316,13 +332,16 @@ Cell.prototype = {
 	},
 
 	_doAttack: function _doAttack() {
-		this._dom.info.classList.add("done");
-		this._dom.entity.querySelector("span").style.color = "#000";
-
 		var id = this._attacks[this._current].id;
 		var result = this._entity.doAttack(id);
 
 		this._done = true;
+		this._level.syncCells();
+
+		this._dom.info.classList.add("done");
+		this._dom.entity.querySelector("span").style.color = "#000";
+		this._minimap.set(this._position[0], this._position[1], "", "");
+
 		if (result) {
 			/* we need to show this text and wait for a confirmation */
 			this._dom.info.innerHTML = "" + result + "<p>Press <strong>Enter</strong> to dismiss this message.</p>";
@@ -334,8 +353,7 @@ Cell.prototype = {
 
 	_finalize: function _finalize() {
 		this._dom.info.innerHTML = "";
-		this.deactivate();
-		this._level.checkCells();
+		this._level.checkLevelOver();
 	}
 };
 "use strict";
@@ -347,17 +365,15 @@ var Entity = function Entity() {
 };
 
 Entity.create = function (depth, element) {
-	/* FIXME shopkeepers, more features?? */
-
 	if (depth <= 4) {
 		return Being.create(depth, element);
 	} else if (Rules.isLevelShop(depth)) {
 		return Shopkeeper.create(depth);
 	} else {
 		var types = {
-			//			"Being": 15,
-			//			"Chest": 1,
-			//			"Trap": 1,
+			Being: 15,
+			Chest: 1,
+			Trap: 1,
 			Shopkeeper: 1
 		};
 		var type = ROT.RNG.getWeightedValue(types);
@@ -375,10 +391,30 @@ Entity.prototype = {
 		var result = "";
 		var outcome = this.computeOutcome(attack);
 		var stats = pc.getStats();
+		var xpRange = Rules.getXpRange(stats.xp);
 
 		for (var p in outcome) {
 			stats[p] += outcome[p];
-			/* FIXME xp level */
+		}
+
+		if (stats.xp >= xpRange[1]) {
+			/* level up */
+
+			var modifier = Rules.getLevelStat();
+			stats.maxhp = Math.round(stats.maxhp * modifier);
+			stats.maxmana = Math.round(stats.maxmana * modifier);
+
+			for (var p in Elements) {
+				stats[p] += Rules.getLevelResistance();
+			}
+
+			stats.strength += Rules.getLevelSkill();
+			stats.magic += Rules.getLevelSkill();
+
+			stats.hp = stats.maxhp;
+			stats.mana = stats.maxmana;
+
+			result = "" + result + "<p>You have reached another experience level!\n\t\t\tYou are now stronger, completely healed and your mana reserves\n\t\t\tare restored.</p>";
 		}
 
 		return result;
@@ -505,7 +541,7 @@ Being.prototype.computeOutcome = function (attack) {
 	outcome.gold = this._gold;
 
 	if (this._element) {
-		outcome["res-" + this._element] = Rules.getResistanceGain();
+		outcome[this._element] = Rules.getResistanceGain();
 	}
 
 	switch (attack) {
@@ -690,16 +726,6 @@ Being.ALL = [{
  */
 var Level = function Level(depth, count, intro, element) {
 	this._depth = depth;
-
-	if (count <= 3) {
-		this._size = [count, 1];
-	} else if (count <= 6) {
-		this._size = [count / 2, 2];
-	} else {
-		this._size = [3, 3];
-	}
-	this._size[1]++; // room for the intro cell
-
 	this._cells = [];
 	this._current = null;
 	this._texture = [];
@@ -709,14 +735,31 @@ var Level = function Level(depth, count, intro, element) {
 		intro: document.createElement("div")
 	};
 
-	for (var i = 0; i < count; i++) {
-		var entity = Entity.create(depth, element);
-		var cell = new Cell(this, entity);
-		this._cells.push(cell);
+	if (count <= 3) {
+		this._size = [count, 1];
+	} else if (count <= 6) {
+		this._size = [count / 2, 2];
+	} else {
+		this._size = [3, 3];
 	}
 
+	this._minimap = new Minimap(this._size[0], this._size[1]);
+	for (var j = 0; j < this._size[1]; j++) {
+		for (var i = 0; i < this._size[0]; i++) {
+			var cell = new Cell(this, [i, j], this._minimap);
+			this._cells.push(cell);
+		}
+	}
+
+	for (var i = 0; i < count; i++) {
+		var cell = this._cells[i % this._cells.length];
+		var entity = Entity.create(depth, element);
+		cell.addEntity(entity);
+	}
+
+	this._size[1]++; // room for the intro cell
 	this._build(intro, element);
-	this.checkCells();
+	this.syncCells();
 };
 
 Level.create = function (depth) {
@@ -772,17 +815,20 @@ Level.prototype = {
 
 		setTimeout(function () {
 			return _this._dom.node.parentElement.removeChild(_this._dom.node);
-		}, 2000);
+		}, 1500);
 	},
 
 	getDepth: function getDepth() {
 		return this._depth;
 	},
 
-	checkCells: function checkCells() {
+	syncCells: function syncCells() {
 		this._cells.forEach(function (cell) {
 			return cell.syncAttacks();
 		});
+	},
+
+	checkLevelOver: function checkLevelOver() {
 		var doable = this._cells.some(function (cell) {
 			return cell.isDoable() && !cell.isDone();
 		});
@@ -908,6 +954,10 @@ Level.prototype = {
 		this._cells.forEach(function (cell) {
 			return _this._dom.node.appendChild(cell.getNode());
 		});
+
+		if (this._depth >= 2) {
+			this._dom.node.appendChild(this._minimap.getNode());
+		}
 	},
 
 	_createTextureData: function _createTextureData(element) {
@@ -991,7 +1041,7 @@ Level._createIntro = function (depth) {
 	}
 
 	if (depth == 3) {
-		intro = "" + intro + "<p>FIXME levelup.</p>\n\t\t<p>As you descend deeper, the number of cells will increase. \n\t\tThey can be also located in multiple rows.</p> \n\t\t";
+		intro = "" + intro + "<p>Keep an eye on your Experience bar. \n\t\tWhen it fills up, you gain an experience level -- do I really \n\t\tneed to explain that in more detail?</p>\n\t\t<p>As you descend deeper, the number of cells will increase. \n\t\tThey can be also located in multiple rows.</p> \n\t\t";
 	} else if (Rules.isLevelElemental(depth) && !this.data.elementalAnnounced) {
 		this.data.elementalAnnounced = true;
 		intro = "" + intro + "<p>Some levels have strong elemental attunement. \n\t\tKeep an eye on these prisoners and try to approach them wisely.</p>";
@@ -1021,7 +1071,7 @@ var PC = function PC() {
 		this._stats[p] = Stats[p].def;
 	}
 	for (var p in Elements) {
-		this._attacks[p] = 1;
+		this._attacks[p] = 0;
 	}
 };
 
@@ -1115,7 +1165,7 @@ var Rules = {
 	/* = Elemental stuff = */
 
 	getResistanceGain: function getResistanceGain() {
-		return 5;
+		return 3;
 	},
 
 	getElementalPenalty: function getElementalPenalty() {
@@ -1146,7 +1196,34 @@ var Rules = {
 
 	getAmmoCost: function getAmmoCost() {
 		return 15;
+	},
+
+	/* = Leveling up = */
+
+	getXpRange: function getXpRange(xp) {
+		if (xp < 10) {
+			return [0, 10];
+		}
+
+		/* 10, 20, 40, 80, ... */
+
+		var base = Math.log(xp / 10) / Math.LN2;
+		base = Math.floor(base);
+		return [10 * Math.pow(2, base), 10 * Math.pow(2, base + 1)];
+	},
+
+	getLevelResistance: function getLevelResistance() {
+		return 2;
+	},
+
+	getLevelSkill: function getLevelSkill() {
+		return 2;
+	},
+
+	getLevelStat: function getLevelStat() {
+		return 1.1;
 	}
+
 };
 "use strict";
 
@@ -1478,6 +1555,42 @@ Shopkeeper.ALL = [{
     ammo: 1, 2, 3 arrows
     ESTE NECO FIXME
  */
+"use strict";
+
+var Minimap = function Minimap(width, height) {
+	this._node = document.createElement("table");
+	this._node.classList.add("minimap");
+
+	this._cells = [];
+
+	for (var j = 0; j < height; j++) {
+		var tr = document.createElement("tr");
+		this._node.appendChild(tr);
+		this._cells.push([]);
+		for (var i = 0; i < width; i++) {
+			var td = document.createElement("td");
+			this._cells[j].push(td);
+			tr.appendChild(td);
+		}
+	}
+};
+
+Minimap.prototype = {
+	getNode: function getNode() {
+		return this._node;
+	},
+	focus: function focus(x, y) {
+		this._cells[y][x].classList.add("active");
+	},
+	blur: function blur(x, y) {
+		this._cells[y][x].classList.remove("active");
+	},
+	set: function set(x, y, ch, color) {
+		var cell = this._cells[y][x];
+		cell.innerHTML = ch;
+		cell.style.color = color;
+	}
+};
 "use strict";
 
 var Game = function Game() {
