@@ -31,7 +31,7 @@ var Level = function(depth, count, intro, element) {
 		this._cells.push(cell);
 	}
 
-	this._build(intro);
+	this._build(intro, element);
 	this.checkCells();
 }
 
@@ -176,8 +176,8 @@ Level.prototype = {
 		return true;
 	},
 
-	_build(introHTML) {
-		this._createTextureData();
+	_build(introHTML, element) {
+		this._createTextureData(element);
 
 		this._dom.node.classList.add("level");
 
@@ -190,18 +190,22 @@ Level.prototype = {
 		this._dom.intro.appendChild(intro);
 
 		this._cells.forEach(cell => this._dom.node.appendChild(cell.getNode()));
-
 	},
 
-	_createTextureData() {
+	_createTextureData(element) {
 		var texture = this._texture;
+		var base = [40, 40, 40];
+		if (element) {
+			base = ROT.Color.interpolate(base, Elements[element].color, 0.5);
+			base = base.map(channel => Math.round(channel/4));
+		}
 
 		var width = 13;
 		var height = 6;
 		for (var i=0;i<width;i++) {
 			texture.push([]);
 			for (var j=0;j<height;j++) {
-				var color = ROT.Color.randomize([40, 40, 40], 5);
+				var color = ROT.Color.randomize(base, 5);
 				var r = ROT.RNG.getUniform();
 				if (r > 0.8) { 
 					color[2] += ROT.RNG.getUniformInt(3, 10);

@@ -47,7 +47,7 @@ var Stats = {
 var Elements = {
 	poison: {
 		label: "Poison",
-		color: [20, 180, 20],
+		color: [100, 160, 20],
 		def: 0
 	},
 
@@ -712,7 +712,7 @@ var Level = function Level(depth, count, intro, element) {
 		this._cells.push(cell);
 	}
 
-	this._build(intro);
+	this._build(intro, element);
 	this.checkCells();
 };
 
@@ -881,10 +881,10 @@ Level.prototype = {
 		return true;
 	},
 
-	_build: function _build(introHTML) {
+	_build: function _build(introHTML, element) {
 		var _this = this;
 
-		this._createTextureData();
+		this._createTextureData(element);
 
 		this._dom.node.classList.add("level");
 
@@ -901,15 +901,22 @@ Level.prototype = {
 		});
 	},
 
-	_createTextureData: function _createTextureData() {
+	_createTextureData: function _createTextureData(element) {
 		var texture = this._texture;
+		var base = [40, 40, 40];
+		if (element) {
+			base = ROT.Color.interpolate(base, Elements[element].color, 0.5);
+			base = base.map(function (channel) {
+				return Math.round(channel / 4);
+			});
+		}
 
 		var width = 13;
 		var height = 6;
 		for (var i = 0; i < width; i++) {
 			texture.push([]);
 			for (var j = 0; j < height; j++) {
-				var color = ROT.Color.randomize([40, 40, 40], 5);
+				var color = ROT.Color.randomize(base, 5);
 				var r = ROT.RNG.getUniform();
 				if (r > 0.8) {
 					color[2] += ROT.RNG.getUniformInt(3, 10);

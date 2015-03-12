@@ -45,7 +45,7 @@ var Stats = {
 var Elements = {
 	"poison": {
 		label: "Poison",
-		color: [20, 180, 20],
+		color: [100, 160, 20],
 		def: 0
 	},
 
