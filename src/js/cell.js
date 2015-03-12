@@ -3,6 +3,7 @@ var Cell = function(level, entity) {
 	this._entity = entity;
 	this._current = 0;
 	this._done = false;
+	this._attacks = [];
 
 	this._dom = {
 		node: document.createElement("div"),
@@ -13,7 +14,6 @@ var Cell = function(level, entity) {
 		confirm: document.createElement("div")
 	}
 
-	this._attacks = this._entity.getAttacks();
 	this._build();
 }
 
@@ -21,8 +21,6 @@ Cell.prototype = {
 	activate() {
 		window.addEventListener("keypress", this);
 		window.addEventListener("keydown", this);
-		
-		if (!this._done) { this.syncAttacks(); }
 	},
 
 	deactivate() {
@@ -48,11 +46,15 @@ Cell.prototype = {
 	},
 
 	syncAttacks() {
-		this._attacks.forEach((attack, index) => {
-			attack.disabled = this._isAttackDisabled(attack.id);
-			attack.node.classList[attack.disabled ? "add" : "remove"]("disabled");
-		});
-		
+		if (this._done) { return; }
+
+		this._attacks = this._entity.getAttacks();
+		this._buildAttacks();
+
+		if (this._current >= this._attacks.length) { 
+			/* current attack disappeared due to interaction in other cell */
+			this._current = 0;
+		}
 		this._switchAttack(this._current);
 	},
 
@@ -80,41 +82,6 @@ Cell.prototype = {
 		}
 	},
 
-	_switchAttack(attackIndex) {
-		this._attacks[this._current].node.classList.remove("active");
-		
-		this._current = attackIndex;
-		this._dom.gauges.innerHTML = "";
-
-		var attack = this._attacks[this._current];
-		attack.node.classList.add("active");
-		attack.node.appendChild(this._dom.confirm);
-
-		var outcome = this._entity.computeOutcome(attack.id);
-		var stats = pc.getStats();
-
-		var box1 = document.createElement("div");
-		box1.classList.add("group");
-
-		this._buildGauge(box1, stats, outcome, "hp");
-		this._buildGauge(box1, stats, outcome, "mana");
-		this._buildGauge(box1, stats, outcome, "ammo");
-		this._buildGauge(box1, stats, outcome, "gold");
-		this._buildGauge(box1, stats, outcome, "xp");
-
-		var box2 = document.createElement("div");
-		box2.classList.add("group");
-
-		this._buildGauge(box2, stats, outcome, "res-fire");
-		this._buildGauge(box2, stats, outcome, "res-water");
-		this._buildGauge(box2, stats, outcome, "res-poison");
-
-		this._dom.gauges.appendChild(box1);
-		this._dom.gauges.appendChild(box2);
-	
-		this._syncConfirm();
-	},
-
 	_build() {
 		var entity = this._entity;
 
@@ -139,26 +106,12 @@ Cell.prototype = {
 		label.innerHTML = `<span>${visual.name}</span>`;
 		this._dom.info.appendChild(label);
 
-		this._buildAttacks();
+		/* main control UI */
+		this._dom.info.appendChild(this._dom.attacks);
 		this._dom.info.appendChild(this._dom.gauges);
-
 		this._dom.node.appendChild(this._dom.info);
 	},
 
-	_buildAttacks() {
-		var ul = document.createElement("ul");
-
-		this._attacks.forEach((attack, index) => {
-			attack.node = document.createElement("li");
-			attack.node.innerHTML = attack.label;
-			ul.appendChild(attack.node);
-		});
-
-		this._dom.attacks.appendChild(ul);
-		this._dom.attacks.appendChild(this._dom.confirm);
-		this._dom.info.appendChild(this._dom.attacks);
-	},
-	
 	_buildGauge(node, stats, outcome, type) {
 		var def = Stats[type];
 		var conf = {
@@ -186,7 +139,23 @@ Cell.prototype = {
 	_getNewValue(stats, outcome, type) {
 		return stats[type] + (type in outcome ? outcome[type] : 0);
 	},
-	
+
+	_buildAttacks() {
+		var ul = document.createElement("ul");
+
+		this._attacks.forEach((attack, index) => {
+			attack.disabled = this._isAttackDisabled(attack.id);
+			attack.node = document.createElement("li");
+			if (attack.disabled) { attack.node.classList.add("disabled"); }
+			attack.node.innerHTML = attack.label;
+			ul.appendChild(attack.node);
+		});
+
+		this._dom.attacks.innerHTML = "";
+		this._dom.attacks.appendChild(ul);
+		this._dom.attacks.appendChild(this._dom.confirm);
+	},
+
 	_isAttackDisabled(id) {
 		var outcome = this._entity.computeOutcome(id);
 		var stats = pc.getStats();
@@ -197,6 +166,56 @@ Cell.prototype = {
 		if (this._getNewValue(stats, outcome, "gold") < 0) { return true; }
 		
 		return false;
+	},
+
+	_switchAttack(attackIndex) {
+		this._attacks[this._current].node.classList.remove("active");
+		
+		this._current = attackIndex;
+		this._dom.gauges.innerHTML = "";
+
+		var attack = this._attacks[this._current];
+		attack.node.classList.add("active");
+		attack.node.appendChild(this._dom.confirm);
+
+		var outcome = this._entity.computeOutcome(attack.id);
+		var stats = pc.getStats();
+
+		var box1 = document.createElement("div");
+		box1.classList.add("group");
+
+		this._buildGauge(box1, stats, outcome, "hp");
+		this._buildGauge(box1, stats, outcome, "mana");
+		this._buildGauge(box1, stats, outcome, "ammo");
+		this._buildGauge(box1, stats, outcome, "strength");
+		this._buildGauge(box1, stats, outcome, "magic");
+
+		var box2 = document.createElement("div");
+		box2.classList.add("group");
+
+		this._buildGauge(box2, stats, outcome, "res-fire");
+		this._buildGauge(box2, stats, outcome, "res-water");
+		this._buildGauge(box2, stats, outcome, "res-poison");
+		this._buildGauge(box2, stats, outcome, "gold");
+		this._buildGauge(box2, stats, outcome, "xp");
+
+		this._dom.gauges.appendChild(box1);
+		this._dom.gauges.appendChild(box2);
+	
+		this._syncConfirm();
+	},
+		
+	_syncConfirm() {
+		var attack = this._attacks[this._current];
+		var node = this._dom.confirm;
+
+		if (attack.disabled) {
+			node.classList.add("disabled");
+			node.innerHTML = "Impossible to do";
+		} else {
+			node.classList.remove("disabled");
+			node.innerHTML = "<strong>Enter</strong> to confirm";
+		}
 	},
 	
 	_doAttack() {
@@ -212,20 +231,6 @@ Cell.prototype = {
 			this._dom.info.innerHTML = result;
 		} else { /* pass control back to level */
 			this._finalize();
-		}
-	},
-		
-	_syncConfirm() {
-		
-		var attack = this._attacks[this._current];
-		var node = this._dom.confirm;
-
-		if (attack.disabled) {
-			node.classList.add("disabled");
-			node.innerHTML = "Impossible to do";
-		} else {
-			node.classList.remove("disabled");
-			node.innerHTML = "<span>Enter</span> to confirm";
 		}
 	},
 

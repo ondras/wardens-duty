@@ -38,7 +38,6 @@ var Rules = {
 	},
 	
 	isLevelElemental(depth) {
-		return true;
 		return ((depth % 5) == 4);
 	}
 }

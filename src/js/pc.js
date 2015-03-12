@@ -3,6 +3,7 @@ var PC = function() {
 	this._attacks = {};
 
 	for (var p in Stats) { this._stats[p] = Stats[p].def; }
+	for (var p in Elements) { this._attacks[p] = 1; }
 }
 
 PC.prototype = {

@@ -314,5 +314,11 @@ Level._ps = [
 	"there is no way out of this prison",
 	"being a Warden is cool",
 	"being a Warden is risky",
-	"captured goldfish may give you a wish"
+	"captured goldfish may give you a wish",
+	"coffee is hard to beat",
+	"dragons are dangerous",
+	"pangolins are dangerous",
+	"you should keep an eye on your health",
+	"you should keep an eye on your mana",
+	"you should have some ammunition ready"
 ].randomize();

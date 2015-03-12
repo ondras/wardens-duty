@@ -15,6 +15,16 @@ var Stats = {
 	"maxmana": {
 		def: 100
 	},
+	"strength": {
+		label: "Strength",
+		color: [50, 180, 100],
+		def: 10
+	},
+	"magic": {
+		label: "Magic affinity",
+		color: [100, 50, 180],
+		def: 10
+	},
 	"gold": {
 		label: "Gold",
 		color: [250, 230, 20],
@@ -35,19 +45,19 @@ var Stats = {
 var Elements = {
 	"poison": {
 		label: "Poison",
-		color: [20, 255, 20],
+		color: [20, 180, 20],
 		def: 0
 	},
 
 	"fire": {
 		label: "Fire",
-		color: [255, 20, 20],
+		color: [180, 20, 20],
 		def: 0
 	},
 
 	"water": {
 		label: "Water",
-		color: [20, 20, 255],
+		color: [20, 20, 180],
 		def: 0
 	}
 }

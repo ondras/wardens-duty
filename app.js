@@ -17,6 +17,16 @@ var Stats = {
 	maxmana: {
 		def: 100
 	},
+	strength: {
+		label: "Strength",
+		color: [50, 180, 100],
+		def: 10
+	},
+	magic: {
+		label: "Magic affinity",
+		color: [100, 50, 180],
+		def: 10
+	},
 	gold: {
 		label: "Gold",
 		color: [250, 230, 20],
@@ -37,19 +47,19 @@ var Stats = {
 var Elements = {
 	poison: {
 		label: "Poison",
-		color: [20, 255, 20],
+		color: [20, 180, 20],
 		def: 0
 	},
 
 	fire: {
 		label: "Fire",
-		color: [255, 20, 20],
+		color: [180, 20, 20],
 		def: 0
 	},
 
 	water: {
 		label: "Water",
-		color: [20, 20, 255],
+		color: [20, 20, 180],
 		def: 0
 	}
 };
@@ -68,6 +78,7 @@ var Cell = function Cell(level, entity) {
 	this._entity = entity;
 	this._current = 0;
 	this._done = false;
+	this._attacks = [];
 
 	this._dom = {
 		node: document.createElement("div"),
@@ -78,7 +89,6 @@ var Cell = function Cell(level, entity) {
 		confirm: document.createElement("div")
 	};
 
-	this._attacks = this._entity.getAttacks();
 	this._build();
 };
 
@@ -86,10 +96,6 @@ Cell.prototype = {
 	activate: function activate() {
 		window.addEventListener("keypress", this);
 		window.addEventListener("keydown", this);
-
-		if (!this._done) {
-			this.syncAttacks();
-		}
 	},
 
 	deactivate: function deactivate() {
@@ -117,13 +123,17 @@ Cell.prototype = {
 	},
 
 	syncAttacks: function syncAttacks() {
-		var _this = this;
+		if (this._done) {
+			return;
+		}
 
-		this._attacks.forEach(function (attack, index) {
-			attack.disabled = _this._isAttackDisabled(attack.id);
-			attack.node.classList[attack.disabled ? "add" : "remove"]("disabled");
-		});
+		this._attacks = this._entity.getAttacks();
+		this._buildAttacks();
 
+		if (this._current >= this._attacks.length) {
+			/* current attack disappeared due to interaction in other cell */
+			this._current = 0;
+		}
 		this._switchAttack(this._current);
 	},
 
@@ -158,41 +168,6 @@ Cell.prototype = {
 		}
 	},
 
-	_switchAttack: function _switchAttack(attackIndex) {
-		this._attacks[this._current].node.classList.remove("active");
-
-		this._current = attackIndex;
-		this._dom.gauges.innerHTML = "";
-
-		var attack = this._attacks[this._current];
-		attack.node.classList.add("active");
-		attack.node.appendChild(this._dom.confirm);
-
-		var outcome = this._entity.computeOutcome(attack.id);
-		var stats = pc.getStats();
-
-		var box1 = document.createElement("div");
-		box1.classList.add("group");
-
-		this._buildGauge(box1, stats, outcome, "hp");
-		this._buildGauge(box1, stats, outcome, "mana");
-		this._buildGauge(box1, stats, outcome, "ammo");
-		this._buildGauge(box1, stats, outcome, "gold");
-		this._buildGauge(box1, stats, outcome, "xp");
-
-		var box2 = document.createElement("div");
-		box2.classList.add("group");
-
-		this._buildGauge(box2, stats, outcome, "res-fire");
-		this._buildGauge(box2, stats, outcome, "res-water");
-		this._buildGauge(box2, stats, outcome, "res-poison");
-
-		this._dom.gauges.appendChild(box1);
-		this._dom.gauges.appendChild(box2);
-
-		this._syncConfirm();
-	},
-
 	_build: function _build() {
 		var entity = this._entity;
 
@@ -217,24 +192,10 @@ Cell.prototype = {
 		label.innerHTML = "<span>" + visual.name + "</span>";
 		this._dom.info.appendChild(label);
 
-		this._buildAttacks();
-		this._dom.info.appendChild(this._dom.gauges);
-
-		this._dom.node.appendChild(this._dom.info);
-	},
-
-	_buildAttacks: function _buildAttacks() {
-		var ul = document.createElement("ul");
-
-		this._attacks.forEach(function (attack, index) {
-			attack.node = document.createElement("li");
-			attack.node.innerHTML = attack.label;
-			ul.appendChild(attack.node);
-		});
-
-		this._dom.attacks.appendChild(ul);
-		this._dom.attacks.appendChild(this._dom.confirm);
+		/* main control UI */
 		this._dom.info.appendChild(this._dom.attacks);
+		this._dom.info.appendChild(this._dom.gauges);
+		this._dom.node.appendChild(this._dom.info);
 	},
 
 	_buildGauge: function _buildGauge(node, stats, outcome, type) {
@@ -265,6 +226,26 @@ Cell.prototype = {
 		return stats[type] + (type in outcome ? outcome[type] : 0);
 	},
 
+	_buildAttacks: function _buildAttacks() {
+		var _this = this;
+
+		var ul = document.createElement("ul");
+
+		this._attacks.forEach(function (attack, index) {
+			attack.disabled = _this._isAttackDisabled(attack.id);
+			attack.node = document.createElement("li");
+			if (attack.disabled) {
+				attack.node.classList.add("disabled");
+			}
+			attack.node.innerHTML = attack.label;
+			ul.appendChild(attack.node);
+		});
+
+		this._dom.attacks.innerHTML = "";
+		this._dom.attacks.appendChild(ul);
+		this._dom.attacks.appendChild(this._dom.confirm);
+	},
+
 	_isAttackDisabled: function _isAttackDisabled(id) {
 		var outcome = this._entity.computeOutcome(id);
 		var stats = pc.getStats();
@@ -285,6 +266,56 @@ Cell.prototype = {
 		return false;
 	},
 
+	_switchAttack: function _switchAttack(attackIndex) {
+		this._attacks[this._current].node.classList.remove("active");
+
+		this._current = attackIndex;
+		this._dom.gauges.innerHTML = "";
+
+		var attack = this._attacks[this._current];
+		attack.node.classList.add("active");
+		attack.node.appendChild(this._dom.confirm);
+
+		var outcome = this._entity.computeOutcome(attack.id);
+		var stats = pc.getStats();
+
+		var box1 = document.createElement("div");
+		box1.classList.add("group");
+
+		this._buildGauge(box1, stats, outcome, "hp");
+		this._buildGauge(box1, stats, outcome, "mana");
+		this._buildGauge(box1, stats, outcome, "ammo");
+		this._buildGauge(box1, stats, outcome, "strength");
+		this._buildGauge(box1, stats, outcome, "magic");
+
+		var box2 = document.createElement("div");
+		box2.classList.add("group");
+
+		this._buildGauge(box2, stats, outcome, "res-fire");
+		this._buildGauge(box2, stats, outcome, "res-water");
+		this._buildGauge(box2, stats, outcome, "res-poison");
+		this._buildGauge(box2, stats, outcome, "gold");
+		this._buildGauge(box2, stats, outcome, "xp");
+
+		this._dom.gauges.appendChild(box1);
+		this._dom.gauges.appendChild(box2);
+
+		this._syncConfirm();
+	},
+
+	_syncConfirm: function _syncConfirm() {
+		var attack = this._attacks[this._current];
+		var node = this._dom.confirm;
+
+		if (attack.disabled) {
+			node.classList.add("disabled");
+			node.innerHTML = "Impossible to do";
+		} else {
+			node.classList.remove("disabled");
+			node.innerHTML = "<strong>Enter</strong> to confirm";
+		}
+	},
+
 	_doAttack: function _doAttack() {
 		this._dom.entity.querySelector("span").style.color = "#000";
 
@@ -300,20 +331,6 @@ Cell.prototype = {
 		} else {
 			/* pass control back to level */
 			this._finalize();
-		}
-	},
-
-	_syncConfirm: function _syncConfirm() {
-
-		var attack = this._attacks[this._current];
-		var node = this._dom.confirm;
-
-		if (attack.disabled) {
-			node.classList.add("disabled");
-			node.innerHTML = "Impossible to do";
-		} else {
-			node.classList.remove("disabled");
-			node.innerHTML = "<span>Enter</span> to confirm";
 		}
 	},
 
@@ -438,7 +455,7 @@ Being._availableVariants = function (available, depth, def, element) {
 	});
 };
 
-Being.prototype.getAttacks = function (pc) {
+Being.prototype.getAttacks = function () {
 	var results = [];
 
 	results.push({
@@ -451,14 +468,27 @@ Being.prototype.getAttacks = function (pc) {
 	} // first goblin
 
 	results.push({
+		id: "magic",
+		label: "Magic missile"
+	});
+
+	results.push({
 		id: "ranged",
 		label: "Shoot a bow"
 	});
 
-	results.push({
-		id: "magic",
-		label: "Magic missile"
-	});
+	var attacks = pc.getAttacks();
+	for (var p in attacks) {
+		var count = attacks[p];
+		if (!count) {
+			continue;
+		}
+
+		results.push({
+			id: p,
+			label: "" + Elements[p].label + " Breath (" + count + ")"
+		});
+	}
 
 	return results;
 };
@@ -477,16 +507,27 @@ Being.prototype.computeOutcome = function (attack) {
 			outcome.hp = -this._difficulty;
 			break;
 
-		case "ranged":
-			outcome.ammo = -1;
-			break;
-
 		case "magic":
 			outcome.mana = -this._difficulty;
+			break;
+
+		case "ranged":
+			outcome.ammo = -1;
 			break;
 	}
 
 	return outcome;
+};
+
+Being.prototype.doAttack = function (attack) {
+	Entity.prototype.doAttack.call(this, attack);
+
+	if (attack in Elements) {
+		var attacks = pc.getAttacks();
+		attacks[attack]--;
+	}
+
+	pc.getAttacks().fire++;
 };
 
 Being.ALL = [{
@@ -517,7 +558,7 @@ Being.ALL = [{
 	visual: {
 		name: "Dog",
 		ch: "d",
-		color: [200, 150, 100]
+		color: [180, 160, 100]
 	},
 	variants: ["Large {}"],
 	max: 6
@@ -918,7 +959,7 @@ Level._createIntro = function (depth) {
 	return "<p>Warden,</p>" + intro;
 };
 
-Level._ps = ["trapped chests are dangerous", "trapped chests are cool", "eating lutefisk is risky", "elemental resistance is important", "elemental resistance is useless", "fire fox is stronger than goo gel", "goo gel is stronger than fire fox", "you should not trust people", "deeper cells have tougher enemies", "there is no way out of this prison", "being a Warden is cool", "being a Warden is risky", "captured goldfish may give you a wish"].randomize();
+Level._ps = ["trapped chests are dangerous", "trapped chests are cool", "eating lutefisk is risky", "elemental resistance is important", "elemental resistance is useless", "fire fox is stronger than goo gel", "goo gel is stronger than fire fox", "you should not trust people", "deeper cells have tougher enemies", "there is no way out of this prison", "being a Warden is cool", "being a Warden is risky", "captured goldfish may give you a wish", "coffee is hard to beat", "dragons are dangerous", "pangolins are dangerous", "you should keep an eye on your health", "you should keep an eye on your mana", "you should have some ammunition ready"].randomize();
 "use strict";
 
 var PC = function PC() {
@@ -927,6 +968,9 @@ var PC = function PC() {
 
 	for (var p in Stats) {
 		this._stats[p] = Stats[p].def;
+	}
+	for (var p in Elements) {
+		this._attacks[p] = 1;
 	}
 };
 
@@ -1188,7 +1232,6 @@ var Rules = {
 	},
 
 	isLevelElemental: function isLevelElemental(depth) {
-		return true;
 		return depth % 5 == 4;
 	}
 };
@@ -1209,7 +1252,7 @@ var Game = function Game() {
 
 Game.prototype = {
 	nextLevel: function nextLevel() {
-		var depth = this._level ? this._level.getDepth() : 0;
+		var depth = this._level ? this._level.getDepth() : 1;
 		depth++;
 
 		var w = window.innerWidth;

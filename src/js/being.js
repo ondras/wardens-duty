@@ -56,7 +56,7 @@ Being._availableVariants = function(available, depth, def, element) {
 }
 
 
-Being.prototype.getAttacks = function(pc) {
+Being.prototype.getAttacks = function() {
 	var results = [];
 
 	results.push({
@@ -67,14 +67,25 @@ Being.prototype.getAttacks = function(pc) {
 	if (this._difficulty == 1) { return results; } // first goblin
 
 	results.push({
+		id: "magic",
+		label: "Magic missile"
+	});
+
+	results.push({
 		id: "ranged",
 		label: "Shoot a bow"
 	});
 
-	results.push({
-		id: "magic",
-		label: "Magic missile"
-	});
+	var attacks = pc.getAttacks();
+	for (var p in attacks) {
+		var count = attacks[p];
+		if (!count) { continue; }
+
+		results.push({
+			id: p,
+			label: `${Elements[p].label} Breath (${count})`
+		});
+	}
 
 	return results;
 }
@@ -93,16 +104,28 @@ Being.prototype.computeOutcome = function(attack) {
 			outcome["hp"] = -this._difficulty;
 		break;
 
-		case "ranged":
-			outcome["ammo"] = -1;
-		break;
-
 		case "magic":
 			outcome["mana"] = -this._difficulty;
+		break;
+
+		case "ranged":
+			outcome["ammo"] = -1;
 		break;
 	}
 
 	return outcome;
+}
+
+Being.prototype.doAttack = function(attack) {
+	Entity.prototype.doAttack.call(this, attack);
+
+	if (attack in Elements) {
+		var attacks = pc.getAttacks();
+		attacks[attack]--;
+	}
+
+	pc.getAttacks()["fire"]++;
+
 }
 
 Being.ALL = [
@@ -134,7 +157,7 @@ Being.ALL = [
 		visual: {
 			name: "Dog",
 			ch: "d",
-			color: [200, 150, 100]
+			color: [180, 160, 100]
 		},
 		variants: ["Large {}"],
 		max: 6
