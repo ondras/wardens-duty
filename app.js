@@ -138,22 +138,21 @@ Cell.prototype = {
 	},
 
 	handleEvent: function handleEvent(e) {
-		if (this._done) {
-			/* done confirmation */
-			this._finalize();
-			return;
-		}
-
 		switch (e.type) {
 			case "keydown":
 				if (e.keyCode != 13) {
 					return;
 				}
 
-				if (this._attacks[this._current].disabled) {
+				if (this._done) {
+					/* done confirmation */
+					this._finalize();
 					return;
 				}
 
+				if (this._attacks[this._current].disabled) {
+					return;
+				}
 				this._doAttack();
 				break;
 
@@ -317,17 +316,16 @@ Cell.prototype = {
 	},
 
 	_doAttack: function _doAttack() {
+		this._dom.info.classList.add("done");
 		this._dom.entity.querySelector("span").style.color = "#000";
 
 		var id = this._attacks[this._current].id;
 		var result = this._entity.doAttack(id);
 
 		this._done = true;
-
 		if (result) {
 			/* we need to show this text and wait for a confirmation */
-			/* FIXME show result */
-			this._dom.info.innerHTML = result;
+			this._dom.info.innerHTML = "" + result + "<p>Press <strong>Enter</strong> to dismiss this message.</p>";
 		} else {
 			/* pass control back to level */
 			this._finalize();
@@ -374,13 +372,16 @@ Entity.prototype = {
 	getAttacks: function getAttacks() {},
 	computeOutcome: function computeOutcome(attack) {},
 	doAttack: function doAttack(attack) {
+		var result = "";
 		var outcome = this.computeOutcome(attack);
 		var stats = pc.getStats();
 
 		for (var p in outcome) {
 			stats[p] += outcome[p];
-			/* FIXME xp */
+			/* FIXME xp level */
 		}
+
+		return result;
 	}
 };
 "use strict";
@@ -390,6 +391,7 @@ var Being = function Being(difficulty, visual, element) {
 	this._difficulty = difficulty;
 	this._element = element;
 	this._arrows = Rules.getArrows();
+	this._gold = Rules.getGoldGain(difficulty);
 };
 Being.prototype = Object.create(Entity.prototype);
 
@@ -496,12 +498,14 @@ Being.prototype.getAttacks = function () {
 
 Being.prototype.computeOutcome = function (attack) {
 	var stats = pc.getStats();
+	var attacks = pc.getAttacks();
 	var outcome = {};
 
 	outcome.xp = this._difficulty;
+	outcome.gold = this._gold;
 
 	if (this._element) {
-		outcome["res-" + this._element] = 5;
+		outcome["res-" + this._element] = Rules.getResistanceGain();
 	}
 
 	switch (attack) {
@@ -518,20 +522,47 @@ Being.prototype.computeOutcome = function (attack) {
 		case "ranged":
 			outcome.ammo = -this._arrows;
 			break;
+
+		default:
+			/* elemental */
+			if (attack == this._element) {
+				/* bad luck => we are resistant */
+				var modifier = Rules.getElementalPenalty();
+			} else if (!this._element) {
+				/* good luck => elemental attack on a non-elemental creature */
+				var modifier = Rules.getElementalBonus();
+			} else {
+				/* best luck => we have different element */
+				var modifier = Rules.getElementalBonus();
+				modifier *= modifier;
+			}
+			outcome.hp = -Math.round(this._difficulty * modifier);
+			break;
 	}
 
 	return outcome;
 };
 
 Being.prototype.doAttack = function (attack) {
-	Entity.prototype.doAttack.call(this, attack);
+	var result = Entity.prototype.doAttack.call(this, attack);
+	var stats = pc.getStats();
+	var attacks = pc.getAttacks();
 
 	if (attack in Elements) {
-		var attacks = pc.getAttacks();
 		attacks[attack]--;
 	}
 
-	pc.getAttacks().fire++;
+	if (this._element && Rules.isAttackGained()) {
+		attacks[this._element]++;
+		result = "" + result + "<p>Killing the " + this._visual.name + " granted you a one-time <strong>elemental attack</strong>!</p>";
+	}
+
+	if (Rules.isArrowFound()) {
+		stats.ammo++;
+		result = "" + result + "<p>You found an <strong>arrow</strong> while searching the corpse!</p>";
+	}
+
+	return result;
 };
 
 Being.ALL = [{
@@ -974,7 +1005,7 @@ var PC = function PC() {
 		this._stats[p] = Stats[p].def;
 	}
 	for (var p in Elements) {
-		this._attacks[p] = 0;
+		this._attacks[p] = 1;
 	}
 };
 
@@ -1197,42 +1228,8 @@ Trap.ALL = [{
 "use strict";
 
 var Rules = {
-	getSkillMultiplier: function getSkillMultiplier(skill) {
-		/* 0 => 1, 100 => 0.5 */
-		skill = Math.min(skill, 100);
-		var frac = skill / 200;
-		return 1 - frac;
-	},
 
-	getArrows: function getArrows() {
-		return ROT.RNG.getUniform() > 0.5 ? 2 : 1;
-	},
-
-	getTrapDamage: function getTrapDamage(depth) {
-		return depth;
-	},
-
-	getChestDamage: function getChestDamage(depth) {
-		return this.getTrapDamage(Math.round(depth / 2));
-	},
-
-	getChestGold: function getChestGold(depth) {
-		return depth;
-	},
-
-	getEntityCount: function getEntityCount(depth) {
-		if (this.isLevelShop(depth)) {
-			return 3;
-		} else if (depth <= 2) {
-			return depth;
-		} else if (depth <= 5) {
-			return 3;
-		} else if (depth <= 10) {
-			return 6;
-		} else {
-			return 9;
-		}
-	},
+	/* = Generating stuff = */
 
 	getBeingDifficulty: function getBeingDifficulty(depth) {
 		return depth;
@@ -1248,6 +1245,74 @@ var Rules = {
 
 	isLevelElemental: function isLevelElemental(depth) {
 		return depth % 5 == 4;
+	},
+
+	getEntityCount: function getEntityCount(depth) {
+		/* FIXME */
+		if (this.isLevelShop(depth)) {
+			return 3;
+		} else if (depth <= 2) {
+			return depth;
+		} else if (depth <= 5) {
+			return 3;
+		} else if (depth <= 10) {
+			return 6;
+		} else {
+			return 9;
+		}
+	},
+
+	/* = Combat outcome = */
+
+	getArrows: function getArrows() {
+		/* how many arrows are consumed */
+		return ROT.RNG.getUniform() > 0.5 ? 2 : 1;
+	},
+
+	getSkillMultiplier: function getSkillMultiplier(skill) {
+		/* damage/mana reduction based on skill */
+		/* 0 => 1, 100 => 0.5 */
+		skill = Math.min(skill, 100);
+		var frac = skill / 200;
+		return 1 - frac;
+	},
+
+	getGoldGain: function getGoldGain(difficulty) {
+		return Math.floor(difficulty / 3);
+	},
+
+	isArrowFound: function isArrowFound() {
+		return ROT.RNG.getUniform() > 0.9;
+	},
+
+	isAttackGained: function isAttackGained() {
+		return ROT.RNG.getUniform() > 0.5;
+	},
+
+	getTrapDamage: function getTrapDamage(depth) {
+		return depth;
+	},
+
+	getChestDamage: function getChestDamage(depth) {
+		return this.getTrapDamage(Math.round(depth / 2));
+	},
+
+	getChestGold: function getChestGold(depth) {
+		return depth;
+	},
+
+	/* = Elemental stuff = */
+
+	getResistanceGain: function getResistanceGain() {
+		return 5;
+	},
+
+	getElementalPenalty: function getElementalPenalty() {
+		return 2;
+	},
+
+	getElementalBonus: function getElementalBonus() {
+		return 0.5;
 	}
 };
 "use strict";
@@ -1267,7 +1332,7 @@ var Game = function Game() {
 
 Game.prototype = {
 	nextLevel: function nextLevel() {
-		var depth = this._level ? this._level.getDepth() : 1;
+		var depth = this._level ? this._level.getDepth() : 10;
 		depth++;
 
 		var w = window.innerWidth;

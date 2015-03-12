@@ -3,6 +3,7 @@ var Being = function(difficulty, visual, element) {
 	this._difficulty = difficulty;
 	this._element = element;
 	this._arrows = Rules.getArrows();
+	this._gold = Rules.getGoldGain(difficulty);
 }
 Being.prototype = Object.create(Entity.prototype);
 
@@ -93,12 +94,14 @@ Being.prototype.getAttacks = function() {
 
 Being.prototype.computeOutcome = function(attack) {
 	var stats = pc.getStats();
+	var attacks = pc.getAttacks();
 	var outcome = {};
 
 	outcome["xp"] = this._difficulty;
+	outcome["gold"] = this._gold;
 	
 	if (this._element) {
-		outcome[`res-${this._element}`] = 5;
+		outcome[`res-${this._element}`] = Rules.getResistanceGain();
 	}
 
 	switch (attack) {
@@ -109,11 +112,23 @@ Being.prototype.computeOutcome = function(attack) {
 
 		case "magic":
 			var modifier = Rules.getSkillMultiplier(stats["magic"]);
-			outcome["mana"] = - Math.round(this._difficulty*modifier);
+			outcome["mana"] = -Math.round(this._difficulty*modifier);
 		break;
 
 		case "ranged":
 			outcome["ammo"] = -this._arrows;
+		break;
+
+		default: /* elemental */
+			if (attack == this._element) { /* bad luck => we are resistant */
+				var modifier = Rules.getElementalPenalty();
+			} else if (!this._element) { /* good luck => elemental attack on a non-elemental creature */
+				var modifier = Rules.getElementalBonus();
+			} else { /* best luck => we have different element */
+				var modifier = Rules.getElementalBonus();
+				modifier *= modifier;
+			}
+			outcome["hp"] = -Math.round(this._difficulty*modifier);
 		break;
 	}
 
@@ -121,14 +136,23 @@ Being.prototype.computeOutcome = function(attack) {
 }
 
 Being.prototype.doAttack = function(attack) {
-	Entity.prototype.doAttack.call(this, attack);
+	var result = Entity.prototype.doAttack.call(this, attack);
+	var stats = pc.getStats();
+	var attacks = pc.getAttacks();
 
-	if (attack in Elements) {
-		var attacks = pc.getAttacks();
-		attacks[attack]--;
+	if (attack in Elements) { attacks[attack]--; }
+
+	if (this._element && Rules.isAttackGained()) {
+		attacks[this._element]++;
+		result = `${result}<p>Killing the ${this._visual.name} granted you a one-time <strong>elemental attack</strong>!</p>`;
 	}
 
-	pc.getAttacks()["fire"]++;
+	if (Rules.isArrowFound()) {
+		stats["ammo"]++;
+		result = `${result}<p>You found an <strong>arrow</strong> while searching the corpse!</p>`;
+	}
+
+	return result;
 
 }
 

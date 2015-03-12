@@ -59,17 +59,16 @@ Cell.prototype = {
 	},
 
 	handleEvent(e) {
-		if (this._done) { /* done confirmation */
-			this._finalize();
-			return;
-		}
-
 		switch (e.type) {
 			case "keydown":
 				if (e.keyCode != 13) { return; }
 
+				if (this._done) { /* done confirmation */
+					this._finalize();
+					return;
+				}
+
 				if (this._attacks[this._current].disabled) { return; }
-				
 				this._doAttack();
 			break;
 			
@@ -219,16 +218,15 @@ Cell.prototype = {
 	},
 	
 	_doAttack() {
+		this._dom.info.classList.add("done");
 		this._dom.entity.querySelector("span").style.color = "#000";
 
 		var id = this._attacks[this._current].id;
 		var result = this._entity.doAttack(id);
 
 		this._done = true;
-
 		if (result) { /* we need to show this text and wait for a confirmation */
-			/* FIXME show result */
-			this._dom.info.innerHTML = result;
+			this._dom.info.innerHTML = `${result}<p>Press <strong>Enter</strong> to dismiss this message.</p>`;
 		} else { /* pass control back to level */
 			this._finalize();
 		}
