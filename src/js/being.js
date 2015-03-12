@@ -107,6 +107,9 @@ Being.prototype.computeOutcome = function(attack) {
 	switch (attack) {
 		case "melee":
 			var modifier = Rules.getSkillMultiplier(stats["strength"]);
+			if (this._element) {
+				modifier *= Rules.getSkillMultiplier(stats[this._element]);
+			}
 			outcome["hp"] = - Math.round(this._difficulty*modifier);
 		break;
 
@@ -230,8 +233,8 @@ Being.ALL = [
 			ch: "i"
 		},
 		variants: ["Large {}"],
-		min: 5,
-		max: 15 
+		min: 4,
+		max: 14 
 	}, {
 		visual: {
 			name: "Lizard",

@@ -192,9 +192,9 @@ Cell.prototype = {
 		var box2 = document.createElement("div");
 		box2.classList.add("group");
 
-		this._buildGauge(box2, stats, outcome, "res-fire");
-		this._buildGauge(box2, stats, outcome, "res-water");
-		this._buildGauge(box2, stats, outcome, "res-poison");
+		this._buildGauge(box2, stats, outcome, "fire");
+		this._buildGauge(box2, stats, outcome, "water");
+		this._buildGauge(box2, stats, outcome, "poison");
 		this._buildGauge(box2, stats, outcome, "gold");
 		this._buildGauge(box2, stats, outcome, "xp");
 

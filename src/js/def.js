@@ -2,7 +2,7 @@ var Stats = {
 	"hp": {
 		label: "Health",
 		color: [50, 220, 50],
-		def: 100
+		def: 50
 	},
 	"maxhp": {
 		def: 100
@@ -63,7 +63,7 @@ var Elements = {
 }
 
 Object.keys(Elements).forEach(key => {
-	Stats[`res-${key}`] = {
+	Stats[key] = {
 		label: `${Elements[key].label} resistance`,
 		color: Elements[key].color,
 		def: 0

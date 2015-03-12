@@ -81,5 +81,27 @@ var Rules = {
 	
 	getElementalBonus() {
 		return 0.5;
+	},
+
+	/* = Shopping stuff = */
+
+	getPotionCost() {
+		return 5;
+	},
+
+	getPotionStrength() {
+		return 5;
+	},
+
+	getTrainingCost() {
+		return 10;
+	},
+
+	getTrainingStrength() {
+		return 5;
+	},
+
+	getAmmoCost() {
+		return 15;
 	}
 }

@@ -22,6 +22,13 @@ Gauge.prototype = {
 		this._node.classList.add("gauge");
 		this._node.style.backgroundColor = ROT.Color.toRGB(conf.color);
 		
+		var diff = conf.newValue - conf.oldValue;
+		if (diff) {
+			var label = `${conf.label} ${diff > 0 ? "+" : ""}${diff}`;
+		} else {
+			var label = conf.label;
+		}
+
 		if (conf.newValue < conf.min) {
 			this._node.classList.add("underflow");
 			conf.newValue = conf.min;
@@ -32,12 +39,7 @@ Gauge.prototype = {
 			conf.newValue = conf.max;
 		}
 
-		var diff = conf.newValue - conf.oldValue;
-		if (diff) {
-			var label = `${conf.label} ${diff > 0 ? "+" : ""}${diff}`;
-		} else {
-			var label = conf.label;
-		}
+		diff = conf.newValue - conf.oldValue;
 
 		var text = new Array(conf.width+1).join(" ").split("");
 		var start = Math.round((text.length-label.length)/2);

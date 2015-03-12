@@ -1,19 +1,17 @@
 - content
   - beings
-  - shopkeepers
   - per-level intros
   - ps texts
   
-
 - logic
   - xp levels
   - leveling
   - achievements?
   - minimap
   - review rules
+  - better difficulty approach / being generation
     
 - ui
   - polishing
-  - lighting NO
   - minimap
   - level transition

@@ -27,7 +27,7 @@ var Level = function(depth, count, intro, element) {
 
 	for (var i=0;i<count;i++) {
 		var entity = Entity.create(depth, element);
-		var cell = new Cell(this, entity, i);
+		var cell = new Cell(this, entity);
 		this._cells.push(cell);
 	}
 
@@ -283,16 +283,19 @@ Level._createIntro = function(depth) {
 	}
 	
 	if (depth == 3) {
-		intro = `${intro}<p>Levelup FIXME</p>
+		intro = `${intro}<p>FIXME levelup.</p>
 		<p>As you descend deeper, the number of cells will increase. 
 		They can be also located in multiple rows.</p> 
 		`;
 	} else if (Rules.isLevelElemental(depth) && !this.data.elementalAnnounced) {
 		this.data.elementalAnnounced = true;
-		intro = `${intro}<p>Elemental FIXME</p>`;
+		intro = `${intro}<p>Some levels have strong elemental attunement. 
+		Keep an eye on these prisoners and try to approach them wisely.</p>`;
 	} else if (Rules.isLevelShop(depth) && !this.data.shopAnnounced) {
 		this.data.shopAnnounced = true;
-		intro = `${intro}<p>Shop FIXME</p>`;
+		intro = `${intro}<p>You would not believe this! Some cells are 
+		occupied by regular shopkeepers who decided to start their 
+		business here. Well, laissez-faire, as they say.</p>`;
 	}
 	
 	intro = `${intro}<p class="sign">Yours,<br/>O.</p>`;
@@ -324,5 +327,16 @@ Level._ps = [
 	"pangolins are dangerous",
 	"you should keep an eye on your health",
 	"you should keep an eye on your mana",
-	"you should have some ammunition ready"
+	"you should have some ammunition ready",
+	"you shall not fight fire with fire",
+	"you shall not fight water with water",
+	"you shall fight water with fire",
+	"you shall fight fire with water",
+	"arrows are rare",
+	"unicorns are rare",
+	"roses are red",
+	"resistance is futile",
+	"this game is a roguelike",
+	"this game is a roguelite",
+	"there is no save/load in a prison"
 ].randomize();

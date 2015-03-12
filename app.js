@@ -4,7 +4,7 @@ var Stats = {
 	hp: {
 		label: "Health",
 		color: [50, 220, 50],
-		def: 100
+		def: 50
 	},
 	maxhp: {
 		def: 100
@@ -65,7 +65,7 @@ var Elements = {
 };
 
 Object.keys(Elements).forEach(function (key) {
-	Stats["res-" + key] = {
+	Stats[key] = {
 		label: "" + Elements[key].label + " resistance",
 		color: Elements[key].color,
 		def: 0
@@ -290,9 +290,9 @@ Cell.prototype = {
 		var box2 = document.createElement("div");
 		box2.classList.add("group");
 
-		this._buildGauge(box2, stats, outcome, "res-fire");
-		this._buildGauge(box2, stats, outcome, "res-water");
-		this._buildGauge(box2, stats, outcome, "res-poison");
+		this._buildGauge(box2, stats, outcome, "fire");
+		this._buildGauge(box2, stats, outcome, "water");
+		this._buildGauge(box2, stats, outcome, "poison");
 		this._buildGauge(box2, stats, outcome, "gold");
 		this._buildGauge(box2, stats, outcome, "xp");
 
@@ -346,19 +346,19 @@ var Entity = function Entity() {
 	this._visual = visual;
 };
 
-Entity.create = function (depth, element, index) {
+Entity.create = function (depth, element) {
 	/* FIXME shopkeepers, more features?? */
 
-	if (depth == 1) {
+	if (depth <= 4) {
 		return Being.create(depth, element);
 	} else if (Rules.isLevelShop(depth)) {
-		/* FIXME shop */
-		return Shopkeeper.create(depth, index);
+		return Shopkeeper.create(depth);
 	} else {
 		var types = {
-			Being: 15,
-			Chest: 1,
-			Trap: 1
+			//			"Being": 15,
+			//			"Chest": 1,
+			//			"Trap": 1,
+			Shopkeeper: 1
 		};
 		var type = ROT.RNG.getWeightedValue(types);
 		return window[type].create(depth, element);
@@ -511,6 +511,9 @@ Being.prototype.computeOutcome = function (attack) {
 	switch (attack) {
 		case "melee":
 			var modifier = Rules.getSkillMultiplier(stats.strength);
+			if (this._element) {
+				modifier *= Rules.getSkillMultiplier(stats[this._element]);
+			}
 			outcome.hp = -Math.round(this._difficulty * modifier);
 			break;
 
@@ -638,8 +641,8 @@ Being.ALL = [{
 		ch: "i"
 	},
 	variants: ["Large {}"],
-	min: 5,
-	max: 15
+	min: 4,
+	max: 14
 }, {
 	visual: {
 		name: "Lizard",
@@ -708,7 +711,7 @@ var Level = function Level(depth, count, intro, element) {
 
 	for (var i = 0; i < count; i++) {
 		var entity = Entity.create(depth, element);
-		var cell = new Cell(this, entity, i);
+		var cell = new Cell(this, entity);
 		this._cells.push(cell);
 	}
 
@@ -982,13 +985,13 @@ Level._createIntro = function (depth) {
 	}
 
 	if (depth == 3) {
-		intro = "" + intro + "<p>Levelup FIXME</p>\n\t\t<p>As you descend deeper, the number of cells will increase. \n\t\tThey can be also located in multiple rows.</p> \n\t\t";
+		intro = "" + intro + "<p>FIXME levelup.</p>\n\t\t<p>As you descend deeper, the number of cells will increase. \n\t\tThey can be also located in multiple rows.</p> \n\t\t";
 	} else if (Rules.isLevelElemental(depth) && !this.data.elementalAnnounced) {
 		this.data.elementalAnnounced = true;
-		intro = "" + intro + "<p>Elemental FIXME</p>";
+		intro = "" + intro + "<p>Some levels have strong elemental attunement. \n\t\tKeep an eye on these prisoners and try to approach them wisely.</p>";
 	} else if (Rules.isLevelShop(depth) && !this.data.shopAnnounced) {
 		this.data.shopAnnounced = true;
-		intro = "" + intro + "<p>Shop FIXME</p>";
+		intro = "" + intro + "<p>You would not believe this! Some cells are \n\t\toccupied by regular shopkeepers who decided to start their \n\t\tbusiness here. Well, laissez-faire, as they say.</p>";
 	}
 
 	intro = "" + intro + "<p class=\"sign\">Yours,<br/>O.</p>";
@@ -1001,7 +1004,7 @@ Level._createIntro = function (depth) {
 	return "<p>Warden,</p>" + intro;
 };
 
-Level._ps = ["trapped chests are dangerous", "trapped chests are cool", "eating lutefisk is risky", "elemental resistance is important", "elemental resistance is useless", "fire fox is stronger than goo gel", "goo gel is stronger than fire fox", "you should not trust people", "deeper cells have tougher enemies", "there is no way out of this prison", "being a Warden is cool", "being a Warden is risky", "captured goldfish may give you a wish", "coffee is hard to beat", "dragons are dangerous", "pangolins are dangerous", "you should keep an eye on your health", "you should keep an eye on your mana", "you should have some ammunition ready"].randomize();
+Level._ps = ["trapped chests are dangerous", "trapped chests are cool", "eating lutefisk is risky", "elemental resistance is important", "elemental resistance is useless", "fire fox is stronger than goo gel", "goo gel is stronger than fire fox", "you should not trust people", "deeper cells have tougher enemies", "there is no way out of this prison", "being a Warden is cool", "being a Warden is risky", "captured goldfish may give you a wish", "coffee is hard to beat", "dragons are dangerous", "pangolins are dangerous", "you should keep an eye on your health", "you should keep an eye on your mana", "you should have some ammunition ready", "you shall not fight fire with fire", "you shall not fight water with water", "you shall fight water with fire", "you shall fight fire with water", "arrows are rare", "unicorns are rare", "roses are red", "resistance is futile", "this game is a roguelike", "this game is a roguelite", "there is no save/load in a prison"].randomize();
 "use strict";
 
 var PC = function PC() {
@@ -1025,6 +1028,118 @@ PC.prototype = {
 	},
 	setStat: function setStat(stat, value) {
 		this._stats[stat] = value;
+	}
+};
+"use strict";
+
+var Rules = {
+
+	/* = Generating stuff = */
+
+	getBeingDifficulty: function getBeingDifficulty(depth) {
+		return depth;
+	},
+
+	isChestTrapped: function isChestTrapped(depth) {
+		return ROT.RNG.getUniform() > 0.5;
+	},
+
+	isLevelShop: function isLevelShop(depth) {
+		return depth % 7 == 5;
+	},
+
+	isLevelElemental: function isLevelElemental(depth) {
+		return depth % 5 == 4;
+	},
+
+	getEntityCount: function getEntityCount(depth) {
+		/* FIXME */
+		if (this.isLevelShop(depth)) {
+			return 3;
+		} else if (depth <= 2) {
+			return depth;
+		} else if (depth <= 5) {
+			return 3;
+		} else if (depth <= 10) {
+			return 6;
+		} else {
+			return 9;
+		}
+	},
+
+	/* = Combat outcome = */
+
+	getArrows: function getArrows() {
+		/* how many arrows are consumed */
+		return ROT.RNG.getUniform() > 0.5 ? 2 : 1;
+	},
+
+	getSkillMultiplier: function getSkillMultiplier(skill) {
+		/* damage/mana reduction based on skill */
+		/* 0 => 1, 100 => 0.5 */
+		skill = Math.min(skill, 100);
+		var frac = skill / 200;
+		return 1 - frac;
+	},
+
+	getGoldGain: function getGoldGain(difficulty) {
+		return Math.floor(difficulty / 3);
+	},
+
+	isArrowFound: function isArrowFound() {
+		return ROT.RNG.getUniform() > 0.9;
+	},
+
+	isAttackGained: function isAttackGained() {
+		return ROT.RNG.getUniform() > 0.5;
+	},
+
+	getTrapDamage: function getTrapDamage(depth) {
+		return depth;
+	},
+
+	getChestDamage: function getChestDamage(depth) {
+		return this.getTrapDamage(Math.round(depth / 2));
+	},
+
+	getChestGold: function getChestGold(depth) {
+		return depth;
+	},
+
+	/* = Elemental stuff = */
+
+	getResistanceGain: function getResistanceGain() {
+		return 5;
+	},
+
+	getElementalPenalty: function getElementalPenalty() {
+		return 2;
+	},
+
+	getElementalBonus: function getElementalBonus() {
+		return 0.5;
+	},
+
+	/* = Shopping stuff = */
+
+	getPotionCost: function getPotionCost() {
+		return 5;
+	},
+
+	getPotionStrength: function getPotionStrength() {
+		return 5;
+	},
+
+	getTrainingCost: function getTrainingCost() {
+		return 10;
+	},
+
+	getTrainingStrength: function getTrainingStrength() {
+		return 5;
+	},
+
+	getAmmoCost: function getAmmoCost() {
+		return 15;
 	}
 };
 "use strict";
@@ -1057,6 +1172,13 @@ Gauge.prototype = {
 		this._node.classList.add("gauge");
 		this._node.style.backgroundColor = ROT.Color.toRGB(conf.color);
 
+		var diff = conf.newValue - conf.oldValue;
+		if (diff) {
+			var label = "" + conf.label + " " + (diff > 0 ? "+" : "") + "" + diff;
+		} else {
+			var label = conf.label;
+		}
+
 		if (conf.newValue < conf.min) {
 			this._node.classList.add("underflow");
 			conf.newValue = conf.min;
@@ -1067,12 +1189,7 @@ Gauge.prototype = {
 			conf.newValue = conf.max;
 		}
 
-		var diff = conf.newValue - conf.oldValue;
-		if (diff) {
-			var label = "" + conf.label + " " + (diff > 0 ? "+" : "") + "" + diff;
-		} else {
-			var label = conf.label;
-		}
+		diff = conf.newValue - conf.oldValue;
 
 		var text = new Array(conf.width + 1).join(" ").split("");
 		var start = Math.round((text.length - label.length) / 2);
@@ -1234,94 +1351,127 @@ Trap.ALL = [{
 }];
 "use strict";
 
-var Rules = {
+var Shopkeeper = function Shopkeeper(name, items) {
+	this._items = items;
 
-	/* = Generating stuff = */
+	var hue = ROT.RNG.getUniform();
+	var color = ROT.Color.hsl2rgb([hue, 1, 0.5]);
+	Entity.call(this, { ch: "@", color: color, name: name });
+};
+Shopkeeper.prototype = Object.create(Entity.prototype);
 
-	getBeingDifficulty: function getBeingDifficulty(depth) {
-		return depth;
-	},
+Shopkeeper.create = function (depth) {
+	var def = this.ALL.random();
+	return new this(def.name, def.items);
+};
 
-	isChestTrapped: function isChestTrapped(depth) {
-		return ROT.RNG.getUniform() > 0.5;
-	},
+Shopkeeper.prototype.getAttacks = function () {
+	return this._items.map(function (item, index) {
+		return {
+			id: index,
+			label: "Buy " + item.name
+		};
+	}).concat({
+		id: "leave",
+		label: "Do not shop"
+	});
+};
 
-	isLevelShop: function isLevelShop(depth) {
-		return depth % 7 == 5;
-	},
+Shopkeeper.prototype.computeOutcome = function (id) {
+	var result = {};
 
-	isLevelElemental: function isLevelElemental(depth) {
-		return depth % 5 == 4;
-	},
-
-	getEntityCount: function getEntityCount(depth) {
-		/* FIXME */
-		if (this.isLevelShop(depth)) {
-			return 3;
-		} else if (depth <= 2) {
-			return depth;
-		} else if (depth <= 5) {
-			return 3;
-		} else if (depth <= 10) {
-			return 6;
-		} else {
-			return 9;
-		}
-	},
-
-	/* = Combat outcome = */
-
-	getArrows: function getArrows() {
-		/* how many arrows are consumed */
-		return ROT.RNG.getUniform() > 0.5 ? 2 : 1;
-	},
-
-	getSkillMultiplier: function getSkillMultiplier(skill) {
-		/* damage/mana reduction based on skill */
-		/* 0 => 1, 100 => 0.5 */
-		skill = Math.min(skill, 100);
-		var frac = skill / 200;
-		return 1 - frac;
-	},
-
-	getGoldGain: function getGoldGain(difficulty) {
-		return Math.floor(difficulty / 3);
-	},
-
-	isArrowFound: function isArrowFound() {
-		return ROT.RNG.getUniform() > 0.9;
-	},
-
-	isAttackGained: function isAttackGained() {
-		return ROT.RNG.getUniform() > 0.5;
-	},
-
-	getTrapDamage: function getTrapDamage(depth) {
-		return depth;
-	},
-
-	getChestDamage: function getChestDamage(depth) {
-		return this.getTrapDamage(Math.round(depth / 2));
-	},
-
-	getChestGold: function getChestGold(depth) {
-		return depth;
-	},
-
-	/* = Elemental stuff = */
-
-	getResistanceGain: function getResistanceGain() {
-		return 5;
-	},
-
-	getElementalPenalty: function getElementalPenalty() {
-		return 2;
-	},
-
-	getElementalBonus: function getElementalBonus() {
-		return 0.5;
+	if (id in this._items) {
+		return this._items[id].outcome;
+	} else {
+		return {};
 	}
 };
+
+Shopkeeper.ALL = [{
+	name: "Potion vendor",
+	items: [{
+		name: "Small HP potion",
+		outcome: {
+			hp: Rules.getPotionStrength(),
+			gold: -Rules.getPotionCost()
+		}
+	}, {
+		name: "Medium HP potion",
+		outcome: {
+			hp: 2 * Rules.getPotionStrength(),
+			gold: -2 * Rules.getPotionCost()
+		}
+	}, {
+		name: "Large HP potion",
+		outcome: {
+			hp: 3 * Rules.getPotionStrength(),
+			gold: -3 * Rules.getPotionCost()
+		}
+	}]
+}, {
+	name: "Mana dealer",
+	items: [{
+		name: "Mana scroll",
+		outcome: {
+			mana: Rules.getPotionStrength(),
+			gold: -Rules.getPotionCost()
+		}
+	}, {
+		name: "Mana book",
+		outcome: {
+			mana: 2 * Rules.getPotionStrength(),
+			gold: -2 * Rules.getPotionCost()
+		}
+	}, {
+		name: "Lutefisk",
+		outcome: {
+			mana: 3 * Rules.getPotionStrength(),
+			hp: -Rules.getPotionStrength(),
+			gold: -3 * Rules.getPotionCost()
+		}
+	}]
+}, {
+	name: "Skill trainer",
+	items: [{
+		name: "strength training",
+		outcome: {
+			strength: Rules.getTrainingStrength(),
+			gold: -Rules.getTrainingCost()
+		}
+	}, {
+		name: "magic training",
+		outcome: {
+			magic: Rules.getTrainingStrength(),
+			gold: -Rules.getTrainingCost()
+		}
+	}]
+}, {
+	name: "Ammunitioner",
+	items: [{
+		name: "1 arrow",
+		outcome: {
+			ammo: 1,
+			gold: -Rules.getAmmoCost()
+		}
+	}, {
+		name: "2 arrows",
+		outcome: {
+			ammo: 2,
+			gold: -2 * Rules.getAmmoCost()
+		}
+	}, {
+		name: "3 arrows",
+		outcome: {
+			ammo: 3,
+			gold: -3 * Rules.getAmmoCost()
+		}
+	}]
+}];
+
+/* 
+    ammo: 1, 2, 3 arrows
+    ESTE NECO FIXME
+ */
 "use strict";
 
 var Game = function Game() {
@@ -1339,7 +1489,7 @@ var Game = function Game() {
 
 Game.prototype = {
 	nextLevel: function nextLevel() {
-		var depth = this._level ? this._level.getDepth() : 10;
+		var depth = this._level ? this._level.getDepth() : 3;
 		depth++;
 
 		var w = window.innerWidth;
