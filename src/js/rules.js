@@ -1,4 +1,15 @@
 var Rules = {
+	getSkillMultiplier(skill) {
+		/* 0 => 1, 100 => 0.5 */
+		skill = Math.min(skill, 100);
+		var frac = skill/200;
+		return (1-frac);
+	},
+
+	getArrows() {
+		return (ROT.RNG.getUniform() > 0.5 ? 2 : 1);
+	},
+
 	getTrapDamage(depth) {
 		return depth;
 	},

@@ -1,7 +1,6 @@
 - content
   - beings
   - shopkeepers
-  - two more attributes
   - per-level intros
   - ps texts
   
@@ -12,15 +11,12 @@
   - thematic levels
   - achievements?
   - minimap
-  - rules
-    - chances
-    - chest gold
-    - trap damange
+  - review rules
     
-
 - ui
   - polishing
   - variable textures
-  - lighting
-  - nav arrows
+  - lighting NO
+  - nav arrows NO
+  - minimap
   - level transition

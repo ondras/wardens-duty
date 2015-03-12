@@ -126,7 +126,7 @@ Cell.prototype = {
 			conf.max = this._getNewValue(stats, outcome, "maxhp");
 		} else if (type == "mana") {
 			conf.max = this._getNewValue(stats, outcome, "maxmana");
-		} else if (type == "ammo" || type == "gold") {
+		} else if (type == "ammo" || type == "gold" || type in Elements) {
 			var oldValue = stats[type];
 			var newValue = this._getNewValue(stats, outcome, type);
 			conf.max = Math.max(oldValue, newValue);
@@ -211,7 +211,7 @@ Cell.prototype = {
 
 		if (attack.disabled) {
 			node.classList.add("disabled");
-			node.innerHTML = "Impossible to do";
+			node.innerHTML = "Impossible";
 		} else {
 			node.classList.remove("disabled");
 			node.innerHTML = "<strong>Enter</strong> to confirm";

@@ -2,6 +2,7 @@ var Being = function(difficulty, visual, element) {
 	Entity.call(this, visual);
 	this._difficulty = difficulty;
 	this._element = element;
+	this._arrows = Rules.getArrows();
 }
 Being.prototype = Object.create(Entity.prototype);
 
@@ -91,6 +92,7 @@ Being.prototype.getAttacks = function() {
 }
 
 Being.prototype.computeOutcome = function(attack) {
+	var stats = pc.getStats();
 	var outcome = {};
 
 	outcome["xp"] = this._difficulty;
@@ -101,15 +103,17 @@ Being.prototype.computeOutcome = function(attack) {
 
 	switch (attack) {
 		case "melee":
-			outcome["hp"] = -this._difficulty;
+			var modifier = Rules.getSkillMultiplier(stats["strength"]);
+			outcome["hp"] = - Math.round(this._difficulty*modifier);
 		break;
 
 		case "magic":
-			outcome["mana"] = -this._difficulty;
+			var modifier = Rules.getSkillMultiplier(stats["magic"]);
+			outcome["mana"] = - Math.round(this._difficulty*modifier);
 		break;
 
 		case "ranged":
-			outcome["ammo"] = -1;
+			outcome["ammo"] = -this._arrows;
 		break;
 	}
 

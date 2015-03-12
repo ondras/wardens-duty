@@ -212,7 +212,7 @@ Cell.prototype = {
 			conf.max = this._getNewValue(stats, outcome, "maxhp");
 		} else if (type == "mana") {
 			conf.max = this._getNewValue(stats, outcome, "maxmana");
-		} else if (type == "ammo" || type == "gold") {
+		} else if (type == "ammo" || type == "gold" || type in Elements) {
 			var oldValue = stats[type];
 			var newValue = this._getNewValue(stats, outcome, type);
 			conf.max = Math.max(oldValue, newValue);
@@ -309,7 +309,7 @@ Cell.prototype = {
 
 		if (attack.disabled) {
 			node.classList.add("disabled");
-			node.innerHTML = "Impossible to do";
+			node.innerHTML = "Impossible";
 		} else {
 			node.classList.remove("disabled");
 			node.innerHTML = "<strong>Enter</strong> to confirm";
@@ -389,6 +389,7 @@ var Being = function Being(difficulty, visual, element) {
 	Entity.call(this, visual);
 	this._difficulty = difficulty;
 	this._element = element;
+	this._arrows = Rules.getArrows();
 };
 Being.prototype = Object.create(Entity.prototype);
 
@@ -494,6 +495,7 @@ Being.prototype.getAttacks = function () {
 };
 
 Being.prototype.computeOutcome = function (attack) {
+	var stats = pc.getStats();
 	var outcome = {};
 
 	outcome.xp = this._difficulty;
@@ -504,15 +506,17 @@ Being.prototype.computeOutcome = function (attack) {
 
 	switch (attack) {
 		case "melee":
-			outcome.hp = -this._difficulty;
+			var modifier = Rules.getSkillMultiplier(stats.strength);
+			outcome.hp = -Math.round(this._difficulty * modifier);
 			break;
 
 		case "magic":
-			outcome.mana = -this._difficulty;
+			var modifier = Rules.getSkillMultiplier(stats.magic);
+			outcome.mana = -Math.round(this._difficulty * modifier);
 			break;
 
 		case "ranged":
-			outcome.ammo = -1;
+			outcome.ammo = -this._arrows;
 			break;
 	}
 
@@ -970,7 +974,7 @@ var PC = function PC() {
 		this._stats[p] = Stats[p].def;
 	}
 	for (var p in Elements) {
-		this._attacks[p] = 1;
+		this._attacks[p] = 0;
 	}
 };
 
@@ -1193,6 +1197,17 @@ Trap.ALL = [{
 "use strict";
 
 var Rules = {
+	getSkillMultiplier: function getSkillMultiplier(skill) {
+		/* 0 => 1, 100 => 0.5 */
+		skill = Math.min(skill, 100);
+		var frac = skill / 200;
+		return 1 - frac;
+	},
+
+	getArrows: function getArrows() {
+		return ROT.RNG.getUniform() > 0.5 ? 2 : 1;
+	},
+
 	getTrapDamage: function getTrapDamage(depth) {
 		return depth;
 	},
