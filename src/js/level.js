@@ -170,9 +170,13 @@ Level.prototype = {
 	_activateCell(x, y) {
 		if (!this._isValid(x, y)) { return; }
 
-		if (this._current) {
+		if (this._current) { /* consider currently selected cell */
 			var index = this._current[0] + (this._current[1]-1)*this._size[0];
-			if (index >= 0) { this._cells[index].deactivate(); }
+			if (index >= 0) { 
+				var cell = this._cells[index];
+				if (cell.isBlocking()) { return; }
+				cell.deactivate(); 
+			}
 		}
 
 		this._current = [x, y];
@@ -335,6 +339,7 @@ Level._ps = [
 	"fire fox is stronger than goo gel",
 	"goo gel is stronger than fire fox",
 	"you should not trust people",
+	"you should not trust goblins",
 	"deeper cells have tougher enemies",
 	"there is no way out of this prison",
 	"being a Warden is cool",

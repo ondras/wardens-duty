@@ -81,6 +81,7 @@ var Cell = function Cell(level, position, minimap) {
 	this._entity = null;
 	this._current = 0;
 	this._done = false;
+	this._blocking = false;
 	this._attacks = [];
 
 	this._dom = {
@@ -104,6 +105,10 @@ Cell.prototype = {
 		window.removeEventListener("keypress", this);
 		window.removeEventListener("keydown", this);
 		this._minimap.blur(this._position[0], this._position[1]);
+	},
+
+	isBlocking: function isBlocking() {
+		return this._blocking;
 	},
 
 	getNode: function getNode() {
@@ -148,12 +153,11 @@ Cell.prototype = {
 	handleEvent: function handleEvent(e) {
 		switch (e.type) {
 			case "keydown":
-				if (e.keyCode != 13) {
+				if (e.keyCode != 13 || this._done) {
 					return;
 				}
 
-				if (this._done) {
-					/* done confirmation */
+				if (this._blocking) {
 					this._finalize();
 					return;
 				}
@@ -335,16 +339,16 @@ Cell.prototype = {
 		var id = this._attacks[this._current].id;
 		var result = this._entity.doAttack(id);
 
-		this._done = true;
-		this._level.syncCells();
-
 		this._dom.info.classList.add("done");
 		this._dom.entity.querySelector("span").style.color = "#000";
 		this._minimap.set(this._position[0], this._position[1], "", "");
 
+		this._level.syncCells();
+
 		if (result) {
 			/* we need to show this text and wait for a confirmation */
-			this._dom.info.innerHTML = "" + result + "<p>Press <strong>Enter</strong> to dismiss this message.</p>";
+			this._dom.info.innerHTML = "" + result + "<p>Press <strong>Enter</strong> to continue.</p>";
+			this._blocking = true;
 		} else {
 			/* pass control back to level */
 			this._finalize();
@@ -352,6 +356,8 @@ Cell.prototype = {
 	},
 
 	_finalize: function _finalize() {
+		this._blocking = false;
+		this._done = true;
 		this._dom.info.innerHTML = "";
 		this._level.checkLevelOver();
 	}
@@ -911,9 +917,14 @@ Level.prototype = {
 		}
 
 		if (this._current) {
+			/* consider currently selected cell */
 			var index = this._current[0] + (this._current[1] - 1) * this._size[0];
 			if (index >= 0) {
-				this._cells[index].deactivate();
+				var cell = this._cells[index];
+				if (cell.isBlocking()) {
+					return;
+				}
+				cell.deactivate();
 			}
 		}
 
@@ -1060,7 +1071,7 @@ Level._createIntro = function (depth) {
 	return "<p>Warden,</p>" + intro;
 };
 
-Level._ps = ["trapped chests are dangerous", "trapped chests are cool", "eating lutefisk is risky", "elemental resistance is important", "elemental resistance is useless", "fire fox is stronger than goo gel", "goo gel is stronger than fire fox", "you should not trust people", "deeper cells have tougher enemies", "there is no way out of this prison", "being a Warden is cool", "being a Warden is risky", "captured goldfish may give you a wish", "coffee is hard to beat", "dragons are dangerous", "pangolins are dangerous", "you should keep an eye on your health", "you should keep an eye on your mana", "you should have some ammunition ready", "you shall not fight fire with fire", "you shall not fight water with water", "you shall fight water with fire", "you shall fight fire with water", "arrows are rare", "unicorns are rare", "roses are red", "resistance is futile", "this game is a roguelike", "this game is a roguelite", "there is no save/load in a prison"].randomize();
+Level._ps = ["trapped chests are dangerous", "trapped chests are cool", "eating lutefisk is risky", "elemental resistance is important", "elemental resistance is useless", "fire fox is stronger than goo gel", "goo gel is stronger than fire fox", "you should not trust people", "you should not trust goblins", "deeper cells have tougher enemies", "there is no way out of this prison", "being a Warden is cool", "being a Warden is risky", "captured goldfish may give you a wish", "coffee is hard to beat", "dragons are dangerous", "pangolins are dangerous", "you should keep an eye on your health", "you should keep an eye on your mana", "you should have some ammunition ready", "you shall not fight fire with fire", "you shall not fight water with water", "you shall fight water with fire", "you shall fight fire with water", "arrows are rare", "unicorns are rare", "roses are red", "resistance is futile", "this game is a roguelike", "this game is a roguelite", "there is no save/load in a prison"].randomize();
 "use strict";
 
 var PC = function PC() {

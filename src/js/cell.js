@@ -6,6 +6,7 @@ var Cell = function(level, position, minimap) {
 	this._entity = null;
 	this._current = 0;
 	this._done = false;
+	this._blocking = false;
 	this._attacks = [];
 
 	this._dom = {
@@ -29,6 +30,10 @@ Cell.prototype = {
 		window.removeEventListener("keypress", this);
 		window.removeEventListener("keydown", this);
 		this._minimap.blur(this._position[0], this._position[1]);
+	},
+
+	isBlocking() {
+		return this._blocking;
 	},
 
 	getNode() {
@@ -69,9 +74,9 @@ Cell.prototype = {
 	handleEvent(e) {
 		switch (e.type) {
 			case "keydown":
-				if (e.keyCode != 13) { return; }
+				if (e.keyCode != 13 || this._done) { return; }
 
-				if (this._done) { /* done confirmation */
+				if (this._blocking) {
 					this._finalize();
 					return;
 				}
@@ -237,21 +242,23 @@ Cell.prototype = {
 		var id = this._attacks[this._current].id;
 		var result = this._entity.doAttack(id);
 
-		this._done = true;
-		this._level.syncCells();
-
 		this._dom.info.classList.add("done");
 		this._dom.entity.querySelector("span").style.color = "#000";
 		this._minimap.set(this._position[0], this._position[1], "", "");
 
+		this._level.syncCells();
+
 		if (result) { /* we need to show this text and wait for a confirmation */
-			this._dom.info.innerHTML = `${result}<p>Press <strong>Enter</strong> to dismiss this message.</p>`;
+			this._dom.info.innerHTML = `${result}<p>Press <strong>Enter</strong> to continue.</p>`;
+			this._blocking = true;
 		} else { /* pass control back to level */
 			this._finalize();
 		}
 	},
 
 	_finalize() {
+		this._blocking = false;
+		this._done = true;
 		this._dom.info.innerHTML = "";
 		this._level.checkLevelOver();
 	}
