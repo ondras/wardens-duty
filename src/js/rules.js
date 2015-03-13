@@ -18,7 +18,7 @@ var Rules = {
 		return ((depth % 5) == 4);
 	},
 	
-	getEntityCount(depth) { /* FIXME */
+	getEntityCount(depth) {
 		if (this.isLevelShop(depth)) {
 			return 3;
 		} else if (depth <= 2) { 
@@ -28,7 +28,8 @@ var Rules = {
 		} else if (depth <= 10) {
 			return 6;
 		} else {
-			return 9*3;
+			var depthBonus = Math.max(0, depth-15);
+			return 9 + depthBonus;
 		}
 	},
 

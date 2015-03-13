@@ -1,4 +1,4 @@
-@import url(http://fonts.googleapis.com/css?family=Inconsolata);
+@import url(http://fonts.googleapis.com/css?family=Inconsolata|Droid+Sans+Mono);
 .level {
   position: absolute;
   transition: left 500ms, top 500ms, opacity 1s;
@@ -19,6 +19,7 @@
   margin-top: 2em;
 }
 .level .minimap {
+  font-family: droid sans mono, monospace;
   position: fixed;
   right: 0.5em;
   top: 0.5em;
@@ -66,7 +67,7 @@
   counter-reset: attack;
   float: left;
   margin-left: 2ch;
-  width: 28ch;
+  width: 25ch;
   /* ul */
 }
 .cell .info .attacks ul {
@@ -107,9 +108,10 @@
 }
 .cell .info .gauges .group {
   display: inline-block;
-  width: 32ch;
+  width: 27ch;
 }
 .entity {
+  font-family: droid sans mono, monospace;
   text-align: center;
   padding-top: 2rem;
 }

@@ -1058,7 +1058,6 @@ var Rules = {
 	},
 
 	getEntityCount: function getEntityCount(depth) {
-		/* FIXME */
 		if (this.isLevelShop(depth)) {
 			return 3;
 		} else if (depth <= 2) {
@@ -1068,7 +1067,8 @@ var Rules = {
 		} else if (depth <= 10) {
 			return 6;
 		} else {
-			return 9 * 3;
+			var depthBonus = Math.max(0, depth - 15);
+			return 9 + depthBonus;
 		}
 	},
 
@@ -1190,7 +1190,7 @@ var Gauge = function Gauge(conf) {
 		color: "",
 		min: 0,
 		max: 100,
-		width: 30,
+		width: 25,
 		oldValue: 0,
 		newValue: 100
 	};
@@ -1738,7 +1738,7 @@ var Game = function Game() {
 
 Game.prototype = {
 	nextLevel: function nextLevel() {
-		var depth = this._level ? this._level.getDepth() : 10;
+		var depth = this._level ? this._level.getDepth() : 0;
 		depth++;
 
 		var w = window.innerWidth;

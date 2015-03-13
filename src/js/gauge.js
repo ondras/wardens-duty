@@ -4,7 +4,7 @@ var Gauge = function(conf) {
 		color: "",
 		min: 0,
 		max: 100,
-		width: 30,
+		width: 25,
 		oldValue: 0, 
 		newValue: 100 
 	}
