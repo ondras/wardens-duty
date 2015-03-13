@@ -5,7 +5,6 @@ var Cell = function(level, position, minimap) {
 
 	this._entities = [];
 	this._current = 0;
-	this._done = false;
 	this._blocking = false;
 	this._attacks = [];
 
@@ -53,7 +52,7 @@ Cell.prototype = {
 	},
 
 	isDone() {
-		return this._done;
+		return !this._entities.length;
 	},
 
 	isDoable() {
@@ -61,7 +60,7 @@ Cell.prototype = {
 	},
 
 	syncAttacks() {
-		if (this._done) { return; }
+		if (this.isDone()) { return; }
 
 		this._attacks = this._entities[0].getAttacks();
 		this._buildAttacks();
@@ -76,7 +75,7 @@ Cell.prototype = {
 	handleEvent(e) {
 		switch (e.type) {
 			case "keydown":
-				if (e.keyCode != 13 || this._done) { return; }
+				if (e.keyCode != 13 || this.isDone()) { return; }
 
 				if (this._blocking) {
 					this._finalize();
@@ -286,7 +285,6 @@ Cell.prototype = {
 		if (this._entities.length) { /* work, work */
 			this._buildEntity();
 		} else { /* pass control back to level */
-			this._done = true;
 			this._dom.info.innerHTML = "";
 			this._level.checkLevelOver();
 		}

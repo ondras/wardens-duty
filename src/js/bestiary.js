@@ -40,6 +40,13 @@ var Bestiary = [
 		diff: 8
 	}, {
 		visual: {
+			name: "Bandit",
+			ch: "b",
+			color: [70, 70, 70]
+		},
+		diff: 5
+	}, {
+		visual: {
 			name: "Pangolin",
 			ch: "p",
 			color: [150, 100, 20]
@@ -73,6 +80,14 @@ var Bestiary = [
 		},
 		min: 5,
 		diff: 12
+	}, {
+		visual: {
+			name: "Worm",
+			ch: "i"
+		},
+		variants: ["Large {}"],
+		min: 4,
+		diff: 7
 	}, {
 		visual: {
 			name: "Beetle",

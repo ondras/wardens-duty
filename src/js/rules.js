@@ -118,15 +118,14 @@ var Rules = {
 	/* = Leveling up = */
 
 	getXpRange(xp) {
-		if (xp < 10) { return [0, 10]; }
-
-		/* 10, 20, 40, 80, ... */
+		/* XP ranges are 10, 20, 40, ... */
+		var c = 10;
 		
-		var base = Math.log(xp/10)/Math.LN2;
+		var base = Math.log(1 + xp/c)/Math.LN2;
 		base = Math.floor(base);
 		return [
-			10*Math.pow(2, base),
-			10*Math.pow(2, base+1)
+			c*(Math.pow(2, base) - 1),
+			c*(Math.pow(2, base+1) - 1)
 		];
 	},
 

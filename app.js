@@ -80,7 +80,6 @@ var Cell = function Cell(level, position, minimap) {
 
 	this._entities = [];
 	this._current = 0;
-	this._done = false;
 	this._blocking = false;
 	this._attacks = [];
 
@@ -128,7 +127,7 @@ Cell.prototype = {
 	},
 
 	isDone: function isDone() {
-		return this._done;
+		return !this._entities.length;
 	},
 
 	isDoable: function isDoable() {
@@ -138,7 +137,7 @@ Cell.prototype = {
 	},
 
 	syncAttacks: function syncAttacks() {
-		if (this._done) {
+		if (this.isDone()) {
 			return;
 		}
 
@@ -155,7 +154,7 @@ Cell.prototype = {
 	handleEvent: function handleEvent(e) {
 		switch (e.type) {
 			case "keydown":
-				if (e.keyCode != 13 || this._done) {
+				if (e.keyCode != 13 || this.isDone()) {
 					return;
 				}
 
@@ -387,7 +386,6 @@ Cell.prototype = {
 			this._buildEntity();
 		} else {
 			/* pass control back to level */
-			this._done = true;
 			this._dom.info.innerHTML = "";
 			this._level.checkLevelOver();
 		}
@@ -696,19 +694,7 @@ var Level = function Level(depth, count, intro, element) {
 		this._size = [3, 3];
 	}
 
-	this._minimap = new Minimap(this._size[0], this._size[1]);
-	for (var j = 0; j < this._size[1]; j++) {
-		for (var i = 0; i < this._size[0]; i++) {
-			var cell = new Cell(this, [i, j], this._minimap);
-			this._cells.push(cell);
-		}
-	}
-
-	for (var i = 0; i < count; i++) {
-		var cell = this._cells[i % this._cells.length];
-		var entity = Entity.create(depth, element);
-		cell.addEntity(entity);
-	}
+	this._buildCells(count, element);
 
 	this._size[1]++; // room for the intro cell
 	this._build(intro, element);
@@ -734,7 +720,8 @@ Level.create = function (depth) {
 	if (Rules.isLevelElemental(depth)) {
 		element = Object.keys(Elements).random();
 	}
-	return new this(depth, count, intro, element);
+	var ctor = location.hash == "#debug" ? Debug : this;
+	return new ctor(depth, count, intro, element);
 };
 
 Level.data = {
@@ -894,6 +881,23 @@ Level.prototype = {
 		return true;
 	},
 
+	_buildCells: function _buildCells(count, element) {
+		this._minimap = new Minimap(this._size[0], this._size[1]);
+
+		for (var j = 0; j < this._size[1]; j++) {
+			for (var i = 0; i < this._size[0]; i++) {
+				var cell = new Cell(this, [i, j], this._minimap);
+				this._cells.push(cell);
+			}
+		}
+
+		for (var i = 0; i < count; i++) {
+			var cell = this._cells[i % this._cells.length];
+			var entity = Entity.create(this._depth, element);
+			cell.addEntity(entity);
+		}
+	},
+
 	_build: function _build(introHTML, element) {
 		var _this = this;
 
@@ -1027,6 +1031,53 @@ Level._createIntro = function (depth) {
 };
 
 Level._ps = ["trapped chests are dangerous", "trapped chests are cool", "eating lutefisk is risky", "elemental resistance is important", "elemental resistance is useless", "fire fox is stronger than goo gel", "goo gel is stronger than fire fox", "you should not trust people", "you should not trust goblins", "deeper cells have tougher enemies", "there is no way out of this prison", "being a Warden is cool", "being a Warden is risky", "captured goldfish may give you a wish", "coffee is hard to beat", "dragons are dangerous", "pangolins are dangerous", "you should keep an eye on your health", "you should keep an eye on your mana", "you should have some ammunition ready", "you shall not fight fire with fire", "you shall not fight water with water", "you shall fight water with fire", "you shall fight fire with water", "arrows are rare", "unicorns are rare", "roses are red", "resistance is futile", "this game is a roguelike", "this game is a roguelite", "there is no save/load in a prison"].randomize();
+"use strict";
+
+var Debug = function Debug() {
+	Level.apply(this, arguments);
+	this._dom.node.appendChild(this._minimap.getNode());
+};
+
+Debug.prototype = Object.create(Level.prototype);
+
+Debug.prototype._buildCells = function (count, element) {
+	var _this = this;
+
+	var beings = [];
+
+	Bestiary.forEach(function (def) {
+		var diff = def.diff;
+
+		if (!def.visual.color) {
+			for (var p in Elements) {
+				var vis = Object.create(def.visual);
+				vis.color = Elements[p].color;
+				var being = new Being(diff, vis, element);
+				beings.push(being);
+			}
+		} else {
+			var being = new Being(diff, def.visual, element);
+			beings.push(being);
+		}
+	});
+
+	var size = Math.ceil(Math.sqrt(beings.length));
+	this._size = [size, size];
+
+	this._minimap = new Minimap(this._size[0], this._size[1]);
+
+	for (var j = 0; j < this._size[1]; j++) {
+		for (var i = 0; i < this._size[0]; i++) {
+			var cell = new Cell(this, [i, j], this._minimap);
+			this._cells.push(cell);
+		}
+	}
+
+	beings.forEach(function (being, index) {
+		var cell = _this._cells[index % _this._cells.length];
+		cell.addEntity(being);
+	});
+};
 "use strict";
 
 var PC = function PC() {
@@ -1178,15 +1229,12 @@ var Rules = {
 	/* = Leveling up = */
 
 	getXpRange: function getXpRange(xp) {
-		if (xp < 10) {
-			return [0, 10];
-		}
+		/* XP ranges are 10, 20, 40, ... */
+		var c = 10;
 
-		/* 10, 20, 40, 80, ... */
-
-		var base = Math.log(xp / 10) / Math.LN2;
+		var base = Math.log(1 + xp / c) / Math.LN2;
 		base = Math.floor(base);
-		return [10 * Math.pow(2, base), 10 * Math.pow(2, base + 1)];
+		return [c * (Math.pow(2, base) - 1), c * (Math.pow(2, base + 1) - 1)];
 	},
 
 	getLevelResistance: function getLevelResistance() {
@@ -1591,6 +1639,13 @@ var Bestiary = [{
 	diff: 8
 }, {
 	visual: {
+		name: "Bandit",
+		ch: "b",
+		color: [70, 70, 70]
+	},
+	diff: 5
+}, {
+	visual: {
 		name: "Pangolin",
 		ch: "p",
 		color: [150, 100, 20]
@@ -1624,6 +1679,14 @@ var Bestiary = [{
 	},
 	min: 5,
 	diff: 12
+}, {
+	visual: {
+		name: "Worm",
+		ch: "i"
+	},
+	variants: ["Large {}"],
+	min: 4,
+	diff: 7
 }, {
 	visual: {
 		name: "Beetle",

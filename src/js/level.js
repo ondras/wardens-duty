@@ -23,19 +23,7 @@ var Level = function(depth, count, intro, element) {
 		this._size = [3, 3];
 	}
 
-	this._minimap = new Minimap(this._size[0], this._size[1]);
-	for (var j=0;j<this._size[1];j++) {
-		for (var i=0;i<this._size[0];i++) {
-			var cell = new Cell(this, [i, j], this._minimap);
-			this._cells.push(cell);
-		}
-	}
-
-	for (var i=0;i<count;i++) {
-		var cell = this._cells[i % this._cells.length];
-		var entity = Entity.create(depth, element);
-		cell.addEntity(entity);
-	}
+	this._buildCells(count, element);
 
 	this._size[1]++; // room for the intro cell
 	this._build(intro, element);
@@ -61,7 +49,8 @@ Level.create = function(depth) {
 	if (Rules.isLevelElemental(depth)) {
 		element = Object.keys(Elements).random();
 	}
-	return new this(depth, count, intro, element);
+	var ctor = (location.hash == "#debug" ? Debug : this);
+	return new ctor(depth, count, intro, element);
 }
 
 Level.data = {
@@ -190,6 +179,23 @@ Level.prototype = {
 		if (x < 0 || y < 0 || x >= this._size[0] || y >= this._size[1]) { return false; }
 		if (y == 0 && x > 0) { return false; }
 		return true;
+	},
+
+	_buildCells(count, element) {
+		this._minimap = new Minimap(this._size[0], this._size[1]);
+
+		for (var j=0;j<this._size[1];j++) {
+			for (var i=0;i<this._size[0];i++) {
+				var cell = new Cell(this, [i, j], this._minimap);
+				this._cells.push(cell);
+			}
+		}
+
+		for (var i=0;i<count;i++) {
+			var cell = this._cells[i % this._cells.length];
+			var entity = Entity.create(this._depth, element);
+			cell.addEntity(entity);
+		}
 	},
 
 	_build(introHTML, element) {
