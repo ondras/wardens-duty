@@ -10,5 +10,5 @@ HTML, CSS (LESS), JavaScript (ES6). To build, just `make`. To build continually,
 
 Two custom fonts are used:
 
- - Inconsolata for the general UI,
- - Droid Sans Mono for individual critters and other dungeon features.
+ - **Inconsolata** for the general UI,
+ - **Droid Sans Mono** for individual critters and other dungeon features.
