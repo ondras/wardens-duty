@@ -113,7 +113,7 @@ Game.prototype = {
 			maybe even a lutefisk.
 			<a href="https://www.youtube.com/watch?v=6dNAbb7vKjY">Be prepared.</a></p>
 			
-			<p>Warden't Duty was created by 
+			<p>Warden's Duty was created by 
 			<a href="http://ondras.zarovi.cz/">Ondřej Žára</a> and the 
 			complete source code is available on
 			<a href="https://github.com/ondras/wardens-duty">GitHub</a>.
