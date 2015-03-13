@@ -1031,7 +1031,7 @@ Level._createIntro = function (depth) {
 	return "<p>Warden,</p>" + intro;
 };
 
-Level._ps = ["trapped chests are dangerous", "trapped chests are cool", "eating lutefisk is risky", "elemental resistance is important", "elemental resistance is useless", "fire fox is stronger than goo gel", "goo gel is stronger than fire fox", "you should not trust people", "you should not trust goblins", "deeper cells have tougher enemies", "there is no way out of this prison", "being a Warden is cool", "being a Warden is risky", "captured goldfish may give you a wish", "coffee is hard to beat", "dragons are dangerous", "pangolins are dangerous", "you should keep an eye on your health", "you should keep an eye on your mana", "you should have some ammunition ready", "you shall not fight fire with fire", "you shall not fight water with water", "you shall fight water with fire", "you shall fight fire with water", "arrows are rare", "unicorns are rare", "roses are red, but not in prison", "resistance is futile", "this game is a roguelike", "this game is a roguelite", "there is no save/load in a prison", "levelling up is better than sex"].randomize();
+Level._ps = ["trapped chests are dangerous", "trapped chests are cool", "eating lutefisk is risky", "elemental resistance is important", "elemental resistance is useless", "fire fox is stronger than goo gel", "goo gel is stronger than fire fox", "you should not trust people", "you should not trust goblins", "deeper prison levels have tougher enemies", "deeper prison levels have more cells", "there is no way out of this prison", "being a warden is cool", "being a warden is risky", "wardens are well paid", "wardens are poorly paid", "captured goldfish may give you a wish", "coffee is hard to beat", "dragons are dangerous", "pangolins are dangerous", "you should keep an eye on your health", "you should keep an eye on your mana", "you should have some ammunition ready", "you shall not fight fire with fire", "you shall not fight water with water", "you shall fight water with fire", "you shall fight fire with water", "arrows are rare", "unicorns are rare", "roses are red, but not in prison", "resistance is futile", "this game is a roguelike", "this game is a roguelite", "there is no save/load in a prison", "levelling up is better than sex", "some shopkeepers are selling stolen goods", "ranged attacks can save your life", "some treasure chests are trapped", "there is a golden treasure hidden somewhere in the prison", ""].randomize();
 "use strict";
 
 var Debug = function Debug() {
@@ -1134,12 +1134,12 @@ var Rules = {
 			return 3;
 		} else if (depth <= 2) {
 			return depth;
-		} else if (depth <= 5) {
+		} else if (depth <= 8) {
 			return 3;
-		} else if (depth <= 10) {
+		} else if (depth <= 12) {
 			return 6;
 		} else {
-			var depthBonus = Math.max(0, depth - 15);
+			var depthBonus = Math.max(0, depth - 16);
 			return 9 + depthBonus;
 		}
 	},
@@ -1148,7 +1148,7 @@ var Rules = {
 
 	getArrows: function getArrows() {
 		/* how many arrows are consumed */
-		return ROT.RNG.getUniform() > 0.5 ? 2 : 1;
+		return ROT.RNG.getUniform() > 0.8 ? 2 : 1;
 	},
 
 	getSkillMultiplier: function getSkillMultiplier(skill) {
@@ -1216,7 +1216,7 @@ var Rules = {
 	},
 
 	getAmmoCost: function getAmmoCost() {
-		return 15;
+		return 12;
 	},
 
 	getResistanceCost: function getResistanceCost() {
@@ -1247,7 +1247,7 @@ var Rules = {
 	},
 
 	getLevelStat: function getLevelStat() {
-		return 1.1;
+		return 1.2;
 	}
 
 };
@@ -1520,7 +1520,7 @@ Shopkeeper.prototype.getAttacks = function () {
 		};
 	}).concat({
 		id: "leave",
-		label: "Do not shop"
+		label: "Leave the shop"
 	});
 };
 
@@ -1771,7 +1771,8 @@ var Bestiary = [{
 		ch: "H",
 		color: [200, 150, 20]
 	},
-	min: 15
+	min: 15,
+	diff: 18
 }, {
 	visual: {
 		name: "Ghost",
@@ -1876,12 +1877,13 @@ Game.prototype = {
 		this._level.deactivate();
 
 		var depth = this._level.getDepth();
+		var gold = pc.getStats().gold;
 		var url = encodeURIComponent(location.href);
 		var status = encodeURIComponent("I got to level " + depth + " at Warden's Duty! " + location.href);
 
 		var node = this._dom.outro;
 		node.id = "outro";
-		node.innerHTML = "<h1>Game over</h1>\n\t\t\t<p>You are unable to continue your duty. All the vicious\n\t\t\tcritters locked inside cells are too hard to defeat \n\t\t\tand the game is over.</p>\n\n\t\t\t<p>On the other hand, you did a fine job cleaning the \n\t\t\tprison up. Many cells are now free and you managed to descend\n\t\t\tto level " + depth + ". Click the icons below to share your \n\t\t\tscore!</p>\n\t\t\t\n\t\t\t<a class=\"twitter\" href=\"https://twitter.com/home?status=" + status + "\">\n\t\t\t\t<span>t</span>\n\t\t\t\t<br/>Twitter\n\t\t\t</a>\n\n\t\t\t<a class=\"gplus\" href=\"https://plus.google.com/share?url=" + url + "\">\n\t\t\t\t<span>g+</span>\n\t\t\t\t<br/>Google Plus\n\t\t\t</a>\n\t\t\t\n\t\t\t<a class=\"fb\" href=\"https://www.facebook.com/sharer/sharer.php?u={$url}\">\n\t\t\t\t<span>f</span>\n\t\t\t\t<br/>Facebook\n\t\t\t</a>\n\n\t\t\t<p>Press <strong>Enter</strong> to play again!</p>\n\t\t";
+		node.innerHTML = "<h1>Game over</h1>\n\t\t\t<p>You are unable to continue your duty. All the vicious\n\t\t\tcritters locked inside cells are too hard to defeat \n\t\t\tand the game is over.</p>\n\n\t\t\t<p>On the other hand, you did a fine job cleaning the \n\t\t\tprison up. Many cells are now free and you managed to descend\n\t\t\tto level <strong>" + depth + "</strong>. You also gathered \n\t\t\t<span style=\"color:" + ROT.Color.toHex(Stats.gold.color) + "\">" + gold + "</span> gold pieces. \n\t\t\tClick the icons below to share your score!</p>\n\t\t\t\n\t\t\t<a class=\"twitter\" href=\"https://twitter.com/home?status=" + status + "\">\n\t\t\t\t<span>t</span>\n\t\t\t\t<br/>Twitter\n\t\t\t</a>\n\n\t\t\t<a class=\"gplus\" href=\"https://plus.google.com/share?url=" + url + "\">\n\t\t\t\t<span>g+</span>\n\t\t\t\t<br/>Google Plus\n\t\t\t</a>\n\t\t\t\n\t\t\t<a class=\"fb\" href=\"https://www.facebook.com/sharer/sharer.php?u={$url}\">\n\t\t\t\t<span>f</span>\n\t\t\t\t<br/>Facebook\n\t\t\t</a>\n\n\t\t\t<p>Press <strong>Enter</strong> to play again! (You will make it further this time...)</p>\n\t\t";
 		document.body.insertBefore(node, document.body.firstChild);
 	},
 

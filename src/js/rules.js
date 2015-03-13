@@ -24,12 +24,12 @@ var Rules = {
 			return 3;
 		} else if (depth <= 2) { 
 			return depth;
-		} else if (depth <= 5) {
+		} else if (depth <= 8) {
 			return 3;
-		} else if (depth <= 10) {
+		} else if (depth <= 12) {
 			return 6;
 		} else {
-			var depthBonus = Math.max(0, depth-15);
+			var depthBonus = Math.max(0, depth-16);
 			return 9 + depthBonus;
 		}
 	},
@@ -37,7 +37,7 @@ var Rules = {
 	/* = Combat outcome = */
 
 	getArrows() { /* how many arrows are consumed */
-		return (ROT.RNG.getUniform() > 0.5 ? 2 : 1);
+		return (ROT.RNG.getUniform() > 0.8 ? 2 : 1);
 	},
 
 	getSkillMultiplier(skill) { /* damage/mana reduction based on skill */
@@ -104,7 +104,7 @@ var Rules = {
 	},
 
 	getAmmoCost() {
-		return 15;
+		return 12;
 	},
 
 	getResistanceCost() {
@@ -138,7 +138,7 @@ var Rules = {
 	},
 
 	getLevelStat() {
-		return 1.1;
+		return 1.2;
 	}
 
 }

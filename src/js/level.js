@@ -354,10 +354,13 @@ Level._ps = [
 	"goo gel is stronger than fire fox",
 	"you should not trust people",
 	"you should not trust goblins",
-	"deeper cells have tougher enemies",
+	"deeper prison levels have tougher enemies",
+	"deeper prison levels have more cells",
 	"there is no way out of this prison",
-	"being a Warden is cool",
-	"being a Warden is risky",
+	"being a warden is cool",
+	"being a warden is risky",
+	"wardens are well paid",
+	"wardens are poorly paid",
 	"captured goldfish may give you a wish",
 	"coffee is hard to beat",
 	"dragons are dangerous",
@@ -376,5 +379,10 @@ Level._ps = [
 	"this game is a roguelike",
 	"this game is a roguelite",
 	"there is no save/load in a prison",
-	"levelling up is better than sex"
+	"levelling up is better than sex",
+	"some shopkeepers are selling stolen goods",
+	"ranged attacks can save your life",
+	"some treasure chests are trapped",
+	"there is a golden treasure hidden somewhere in the prison",
+	""
 ].randomize();

@@ -18,7 +18,7 @@ Shopkeeper.prototype.getAttacks = function() {
 		label: `Buy ${item.name}`
 	})).concat({
 		id: "leave",
-		label: "Do not shop"
+		label: "Leave the shop"
 	});
 }
 

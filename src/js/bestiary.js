@@ -133,7 +133,8 @@ var Bestiary = [
 			ch: "H",
 			color: [200, 150, 20]
 		},
-		min: 15
+		min: 15,
+		diff: 18
 	}, {
 		visual: {
 			name: "Ghost",

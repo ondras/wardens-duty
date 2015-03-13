@@ -29,6 +29,7 @@ Game.prototype = {
 		this._level.deactivate();
 		
 		var depth = this._level.getDepth();
+		var gold = pc.getStats().gold;
 		var url = encodeURIComponent(location.href);
 		var status = encodeURIComponent(`I got to level ${depth} at Warden's Duty! ${location.href}`);
 
@@ -41,8 +42,9 @@ Game.prototype = {
 
 			<p>On the other hand, you did a fine job cleaning the 
 			prison up. Many cells are now free and you managed to descend
-			to level ${depth}. Click the icons below to share your 
-			score!</p>
+			to level <strong>${depth}</strong>. You also gathered 
+			<span style="color:${ROT.Color.toHex(Stats.gold.color)}">${gold}</span> gold pieces. 
+			Click the icons below to share your score!</p>
 			
 			<a class="twitter" href="https://twitter.com/home?status=${status}">
 				<span>t</span>
@@ -59,7 +61,7 @@ Game.prototype = {
 				<br/>Facebook
 			</a>
 
-			<p>Press <strong>Enter</strong> to play again!</p>
+			<p>Press <strong>Enter</strong> to play again! (You will make it further this time...)</p>
 		`;
 		document.body.insertBefore(node, document.body.firstChild);
 	},
