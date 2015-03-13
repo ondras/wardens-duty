@@ -291,7 +291,7 @@ Level._createIntro = function(depth) {
 	if (depth == 1) {
 		intro = `<p>welcome to the prison. As you might have already noticed, 
 		all our cells are full. You really need to fix that.</p>
-		<p>This first level has just one cell. Taking care about that goblin
+		<p>This first level has just one cell. Taking care of that goblin
 		there shall be an easy task. Just press the <strong>↓</strong> 
 		(or <strong>s</strong>) key to move around and do what you must.</p>
 		<p>By the way: you will see your own stats below each enemy.</p>
