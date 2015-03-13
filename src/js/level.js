@@ -310,8 +310,8 @@ Level._createIntro = function(depth) {
 	
 	if (depth == 3) {
 		intro = `${intro}<p>Keep an eye on your Experience bar. 
-		When it fills up, you gain an experience level -- do I really 
-		need to explain that in more detail?</p>`;
+		When it fills up, you gain an experience level, improving your stats and 
+		-- do I really need to explain that in more detail?</p>`;
 	} else if (Rules.isLevelElemental(depth) && !this.data.elementalAnnounced) {
 		this.data.elementalAnnounced = true;
 		intro = `${intro}<p>Some levels have strong elemental attunement. 
@@ -371,9 +371,10 @@ Level._ps = [
 	"you shall fight fire with water",
 	"arrows are rare",
 	"unicorns are rare",
-	"roses are red",
+	"roses are red, but not in prison",
 	"resistance is futile",
 	"this game is a roguelike",
 	"this game is a roguelite",
-	"there is no save/load in a prison"
+	"there is no save/load in a prison",
+	"levelling up is better than sex"
 ].randomize();

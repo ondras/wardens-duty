@@ -12,7 +12,8 @@ Entity.create = function(depth, element) {
 			"Being": 15,
 			"Chest": 1,
 			"Trap": 1,
-			"Shopkeeper": 1
+			"Shopkeeper": 1,
+			"Pool": 1
 		}
 		var type = ROT.RNG.getWeightedValue(types);
 		return window[type].create(depth, element);

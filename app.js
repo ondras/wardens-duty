@@ -409,7 +409,8 @@ Entity.create = function (depth, element) {
 			Being: 15,
 			Chest: 1,
 			Trap: 1,
-			Shopkeeper: 1
+			Shopkeeper: 1,
+			Pool: 1
 		};
 		var type = ROT.RNG.getWeightedValue(types);
 		return window[type].create(depth, element);
@@ -1003,7 +1004,7 @@ Level._createIntro = function (depth) {
 	}
 
 	if (depth == 3) {
-		intro = "" + intro + "<p>Keep an eye on your Experience bar. \n\t\tWhen it fills up, you gain an experience level -- do I really \n\t\tneed to explain that in more detail?</p>";
+		intro = "" + intro + "<p>Keep an eye on your Experience bar. \n\t\tWhen it fills up, you gain an experience level, improving your stats and \n\t\t-- do I really need to explain that in more detail?</p>";
 	} else if (Rules.isLevelElemental(depth) && !this.data.elementalAnnounced) {
 		this.data.elementalAnnounced = true;
 		intro = "" + intro + "<p>Some levels have strong elemental attunement. \n\t\tKeep an eye on these prisoners and try to approach them wisely.</p>";
@@ -1030,7 +1031,7 @@ Level._createIntro = function (depth) {
 	return "<p>Warden,</p>" + intro;
 };
 
-Level._ps = ["trapped chests are dangerous", "trapped chests are cool", "eating lutefisk is risky", "elemental resistance is important", "elemental resistance is useless", "fire fox is stronger than goo gel", "goo gel is stronger than fire fox", "you should not trust people", "you should not trust goblins", "deeper cells have tougher enemies", "there is no way out of this prison", "being a Warden is cool", "being a Warden is risky", "captured goldfish may give you a wish", "coffee is hard to beat", "dragons are dangerous", "pangolins are dangerous", "you should keep an eye on your health", "you should keep an eye on your mana", "you should have some ammunition ready", "you shall not fight fire with fire", "you shall not fight water with water", "you shall fight water with fire", "you shall fight fire with water", "arrows are rare", "unicorns are rare", "roses are red", "resistance is futile", "this game is a roguelike", "this game is a roguelite", "there is no save/load in a prison"].randomize();
+Level._ps = ["trapped chests are dangerous", "trapped chests are cool", "eating lutefisk is risky", "elemental resistance is important", "elemental resistance is useless", "fire fox is stronger than goo gel", "goo gel is stronger than fire fox", "you should not trust people", "you should not trust goblins", "deeper cells have tougher enemies", "there is no way out of this prison", "being a Warden is cool", "being a Warden is risky", "captured goldfish may give you a wish", "coffee is hard to beat", "dragons are dangerous", "pangolins are dangerous", "you should keep an eye on your health", "you should keep an eye on your mana", "you should have some ammunition ready", "you shall not fight fire with fire", "you shall not fight water with water", "you shall fight water with fire", "you shall fight fire with water", "arrows are rare", "unicorns are rare", "roses are red, but not in prison", "resistance is futile", "this game is a roguelike", "this game is a roguelite", "there is no save/load in a prison", "levelling up is better than sex"].randomize();
 "use strict";
 
 var Debug = function Debug() {
@@ -1459,6 +1460,44 @@ Trap.ALL = [{
 }];
 "use strict";
 
+var Pool = function Pool(depth) {
+	var hue = ROT.RNG.getUniform();
+	var color = ROT.Color.hsl2rgb([hue, 0.8, 0.8]);
+	Entity.call(this, { ch: "≈", color: color, name: "Magic pool" });
+
+	this._outcome = [{ hp: -10 }, { hp: +10 }, { mana: -10 }, { mana: +10 }, { strength: -5 }, { strength: +5 }, { magic: -5 }, { magic: +5 }].random();
+};
+Pool.prototype = Object.create(Entity.prototype);
+
+Pool.create = function (depth, element) {
+	return new this(depth);
+};
+
+Pool.prototype.getAttacks = function () {
+	var results = [];
+
+	results.push({
+		id: "drink",
+		label: "Drink from the pool"
+	});
+
+	results.push({
+		id: "ignore",
+		label: "Ignore the pool"
+	});
+
+	return results;
+};
+
+Pool.prototype.computeOutcome = function (id) {
+	if (id == "ignore") {
+		return {};
+	} else {
+		return this._outcome;
+	}
+};
+"use strict";
+
 var Shopkeeper = function Shopkeeper(name, items) {
 	this._items = items;
 
@@ -1682,7 +1721,7 @@ var Bestiary = [{
 }, {
 	visual: {
 		name: "Worm",
-		ch: "i"
+		ch: "w"
 	},
 	variants: ["Large {}"],
 	min: 4,

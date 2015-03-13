@@ -83,7 +83,7 @@ var Bestiary = [
 	}, {
 		visual: {
 			name: "Worm",
-			ch: "i"
+			ch: "w"
 		},
 		variants: ["Large {}"],
 		min: 4,

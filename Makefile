@@ -1,4 +1,4 @@
-FILES = def cell entity being level debug pc rules gauge chest trap shopkeeper bestiary minimap game
+FILES = def cell entity being level debug pc rules gauge chest trap pool shopkeeper bestiary minimap game
 JS = $(foreach file,$(FILES),src/js/$(file).js)
 
 all: app.js app.css
