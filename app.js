@@ -472,17 +472,21 @@ Being.create = function (depth, element) {
 	var _this = this;
 
 	var visual = null;
+	var difficulty = 0;
+
 	if (depth == 1) {
-		visual = this.ALL[0].visual;
+		visual = Bestiary[0].visual;
+		difficulty = Bestiary[0].difficulty;
 	} else {
 		var avail = [];
-		this.ALL.forEach(function (def) {
+		Bestiary.forEach(function (def) {
 			return _this._availableVariants(avail, depth, def, element);
 		});
 
 		var result = avail.random();
+		difficulty = result.difficulty;
 		var def = result.def;
-		var visual = Object.create(def.visual);
+		visual = Object.create(def.visual);
 
 		if (!visual.color) {
 			/* apply element */
@@ -497,38 +501,50 @@ Being.create = function (depth, element) {
 			if (result.variant >= def.variants.length / 2) {
 				visual.ch = visual.ch.toUpperCase();
 			}
+			difficulty = result.difficulty;
 		}
 	}
 
-	var difficulty = Rules.getBeingDifficulty(depth);
+	difficulty = Rules.getBeingDifficulty(difficulty, depth);
 	return new this(difficulty, visual, element);
 };
 
 Being._availableVariants = function (available, depth, def, element) {
 	if (element && def.visual.color) {
 		return;
-	} // elemental do not have colors
+	} // elemental beings do not have colors
 
 	var min = def.min || 0;
-	var max = def.max || Infinity;
-	if (depth >= min && depth <= max) {
-		available.push({ def: def, variant: 0 });
+	if (depth < min) {
+		return;
 	}
 
-	max && def.variants && def.variants.forEach(function (variant, index) {
-		var range = max - min;
-		var num = index + 1;
-		var variantMin = min + range * num / 2;
-		var variantMax = variantMin + range;
-		if (depth >= variantMin && depth <= variantMax) {
-			/* variant within range */
-			available.push({ def: def, variant: num });
-		}
-		if (depth > variantMax && index + 1 == def.variants.length) {
-			/* past max variant range */
-			available.push({ def: def, variant: num });
-		}
-	});
+	if (def.variants) {
+		/* pick available variants */
+		var range = def.diff - min;
+
+		def.variants.forEach(function (variant, index) {
+			var variantIndex = index + 1;
+			var variantMin = min + variantIndex * range;
+			var variantMax = variantIndex == def.variants.length ? Infinity : variantMin + 2 * range;
+			if (depth < variantMin || depth > variantMax) {
+				return;
+			}
+
+			available.push({
+				def: def,
+				variant: variantIndex,
+				difficulty: variantMin + range
+			});
+		});
+	} else {
+		/* pick just the starting one */
+		available.push({
+			def: def,
+			variant: 0,
+			difficulty: def.diff
+		});
+	}
 };
 
 Being.prototype.getAttacks = function () {
@@ -640,119 +656,6 @@ Being.prototype.doAttack = function (attack) {
 
 	return result;
 };
-
-Being.ALL = [{
-	visual: {
-		name: "Goblin",
-		ch: "g",
-		color: [20, 250, 20]
-	},
-	variants: ["{} Chieftain", "Large {}", "{} King"],
-	max: 6
-}, {
-	visual: {
-		name: "Rat",
-		ch: "r",
-		color: [150, 100, 20]
-	},
-	variants: ["Giant {}"],
-	max: 6
-}, {
-	visual: {
-		name: "Bat",
-		ch: "b",
-		color: [180, 180, 180]
-	},
-	variants: ["Giant {}"],
-	max: 6
-}, {
-	visual: {
-		name: "Dog",
-		ch: "d",
-		color: [180, 160, 100]
-	},
-	variants: ["Large {}"],
-	max: 6
-}, {
-	visual: {
-		name: "Pangolin",
-		ch: "p",
-		color: [150, 100, 20]
-	},
-	variants: ["Giant {}"],
-	min: 3,
-	max: 10
-}, {
-	visual: {
-		name: "Orc",
-		ch: "o",
-		color: [20, 150, 20]
-	},
-	variants: ["Large {}", "{} Leader"],
-	min: 5,
-	max: 12
-}, {
-	visual: {
-		name: "Ogre",
-		ch: "O",
-		color: [20, 20, 200]
-	},
-	variants: ["{} Magus", "{} King"],
-	min: 6,
-	max: 14
-}, {
-	visual: {
-		name: "Carnivorous gelatine",
-		ch: "j",
-		color: [240, 20, 240]
-	},
-	min: 5,
-	max: 20
-}, {
-	visual: {
-		name: "Beetle",
-		ch: "i"
-	},
-	variants: ["Large {}"],
-	min: 4,
-	max: 14
-}, {
-	visual: {
-		name: "Lizard",
-		ch: "l"
-	},
-	variants: ["Large {}"],
-	min: 5,
-	max: 15
-}, {
-	visual: {
-		name: "Elemental",
-		ch: "e"
-	},
-	variants: ["Large {}"],
-	min: 10,
-	max: 20
-}, {
-	visual: {
-		name: "Dragon",
-		ch: "D",
-		color: [250, 230, 20]
-	},
-	min: 12
-}, {
-	visual: {
-		name: "Dragon",
-		ch: "D"
-	},
-	min: 12
-}, {
-	visual: {
-		name: "Hydra",
-		ch: "H",
-		color: [200, 150, 20]
-	},
-	min: 15
-}];
 "use strict";
 
 /**
@@ -1138,8 +1041,8 @@ var Rules = {
 
 	/* = Generating stuff = */
 
-	getBeingDifficulty: function getBeingDifficulty(depth) {
-		return depth;
+	getBeingDifficulty: function getBeingDifficulty(difficulty, depth) {
+		return Math.round(difficulty + depth / 4);
 	},
 
 	isChestTrapped: function isChestTrapped(depth) {
@@ -1242,6 +1145,14 @@ var Rules = {
 
 	getAmmoCost: function getAmmoCost() {
 		return 15;
+	},
+
+	getResistanceCost: function getResistanceCost() {
+		return 5;
+	},
+
+	getResistanceStrength: function getResistanceStrength() {
+		return 3;
 	},
 
 	/* = Leveling up = */
@@ -1595,12 +1506,185 @@ Shopkeeper.ALL = [{
 			gold: -3 * Rules.getAmmoCost()
 		}
 	}]
+}, {
+	name: "Elemental scholar",
+	items: [{
+		name: "fire training",
+		outcome: {
+			gold: -Rules.getResistanceCost(),
+			fire: Rules.getResistanceStrength()
+		}
+	}, {
+		name: "water training",
+		outcome: {
+			gold: -Rules.getResistanceCost(),
+			water: Rules.getResistanceStrength()
+		}
+	}, {
+		name: "poison training",
+		outcome: {
+			gold: -Rules.getResistanceCost(),
+			poison: Rules.getResistanceStrength()
+		}
+	}]
 }];
+"use strict";
 
-/* 
-    ammo: 1, 2, 3 arrows
-    ESTE NECO FIXME
- */
+var Bestiary = [{
+	visual: {
+		name: "Goblin",
+		ch: "g",
+		color: [20, 250, 20]
+	},
+	variants: ["{} Chieftain", "Large {}", "{} King"],
+	diff: 3
+}, {
+	visual: {
+		name: "Rat",
+		ch: "r",
+		color: [150, 100, 20]
+	},
+	variants: ["Giant {}"],
+	diff: 3
+}, {
+	visual: {
+		name: "Bat",
+		ch: "b",
+		color: [180, 180, 180]
+	},
+	variants: ["Giant {}"],
+	diff: 3
+}, {
+	visual: {
+		name: "Dog",
+		ch: "d",
+		color: [180, 160, 100]
+	},
+	variants: ["Large {}"],
+	diff: 3
+}, {
+	visual: {
+		name: "Swordsman",
+		ch: "s",
+		color: [50, 50, 180]
+	},
+	diff: 8
+}, {
+	visual: {
+		name: "Pangolin",
+		ch: "p",
+		color: [150, 100, 20]
+	},
+	variants: ["Giant {}"],
+	min: 3,
+	diff: 5
+}, {
+	visual: {
+		name: "Orc",
+		ch: "o",
+		color: [20, 150, 20]
+	},
+	variants: ["Large {}", "{} Leader"],
+	min: 5,
+	diff: 8
+}, {
+	visual: {
+		name: "Ogre",
+		ch: "O",
+		color: [20, 20, 200]
+	},
+	variants: ["{} Magus", "{} King"],
+	min: 6,
+	diff: 10
+}, {
+	visual: {
+		name: "Carnivorous gelatine",
+		ch: "j",
+		color: [240, 20, 240]
+	},
+	min: 5,
+	diff: 12
+}, {
+	visual: {
+		name: "Beetle",
+		ch: "i"
+	},
+	variants: ["Large {}"],
+	min: 4,
+	diff: 7
+}, {
+	visual: {
+		name: "Lizard",
+		ch: "l"
+	},
+	variants: ["Large {}"],
+	min: 5,
+	diff: 10
+}, {
+	visual: {
+		name: "Elemental",
+		ch: "e"
+	},
+	variants: ["Large {}"],
+	min: 8,
+	diff: 12
+}, {
+	visual: {
+		name: "Dragon",
+		ch: "D",
+		color: [250, 230, 20]
+	},
+	min: 12,
+	diff: 16
+}, {
+	visual: {
+		name: "Dragon",
+		ch: "D"
+	},
+	min: 12,
+	diff: 16
+}, {
+	visual: {
+		name: "Hydra",
+		ch: "H",
+		color: [200, 150, 20]
+	},
+	min: 15
+}, {
+	visual: {
+		name: "Ghost",
+		ch: "g",
+		color: [200, 200, 200]
+	},
+	variants: ["Large {}"],
+	min: 7,
+	diff: 10
+}, {
+	visual: {
+		name: "Zombie",
+		ch: "z",
+		color: [20, 120, 120]
+	},
+	variants: ["Large {}"],
+	min: 8,
+	diff: 12
+}, {
+	visual: {
+		name: "Mummy",
+		ch: "Z",
+		color: [250, 220, 20]
+	},
+	min: 12,
+	diff: 15
+}, {
+	visual: {
+		name: "Vampire",
+		ch: "V",
+		color: [220, 20, 220]
+	},
+	min: 14,
+	diff: 18
+}];
 "use strict";
 
 var Minimap = function Minimap(width, height) {

@@ -2,8 +2,8 @@ var Rules = {
 
 	/* = Generating stuff = */
 
-	getBeingDifficulty(depth) {
-		return depth;
+	getBeingDifficulty(difficulty, depth) {
+		return Math.round(difficulty + depth/4);
 	},
 	
 	isChestTrapped(depth) {
@@ -104,7 +104,15 @@ var Rules = {
 	getAmmoCost() {
 		return 15;
 	},
+
+	getResistanceCost() {
+		return 5;
+	},
 	
+	getResistanceStrength() {
+		return 3;
+	},
+
 	/* = Leveling up = */
 
 	getXpRange(xp) {

@@ -9,15 +9,19 @@ Being.prototype = Object.create(Entity.prototype);
 
 Being.create = function(depth, element) {
 	var visual = null;
+	var difficulty = 0;
+
 	if (depth == 1) { 
-		visual = this.ALL[0].visual;
+		visual = Bestiary[0].visual;
+		difficulty = Bestiary[0].difficulty;
 	} else {
 		var avail = [];
-		this.ALL.forEach(def => this._availableVariants(avail, depth, def, element));
+		Bestiary.forEach(def => this._availableVariants(avail, depth, def, element));
 		
 		var result = avail.random();
+		difficulty = result.difficulty;
 		var def = result.def;
-		var visual = Object.create(def.visual);
+		visual = Object.create(def.visual);
 		
 		if (!visual.color) { /* apply element */
 			element = element || Object.keys(Elements).random();
@@ -29,32 +33,43 @@ Being.create = function(depth, element) {
 			visual.name = def.variants[result.variant-1].replace("{}", visual.name);
 			visual.color = ROT.Color.interpolate(visual.color, [0,0,0], result.variant/10);
 			if (result.variant >= def.variants.length/2) { visual.ch = visual.ch.toUpperCase(); }
+			difficulty = result.difficulty;
 		}
 	}
 	
-	var difficulty = Rules.getBeingDifficulty(depth);
+	difficulty = Rules.getBeingDifficulty(difficulty, depth);
 	return new this(difficulty, visual, element);
 }
 
 Being._availableVariants = function(available, depth, def, element) {
-	if (element && def.visual.color) { return; } // elemental do not have colors
+	if (element && def.visual.color) { return; } // elemental beings do not have colors
 
 	var min = def.min || 0;
-	var max = def.max || Infinity;
-	if (depth >= min && depth <= max) { available.push({def:def, variant:0}); }
+	if (depth < min) { return; }
 
-	max && def.variants && def.variants.forEach((variant, index) => {
-		var range = max-min;
-		var num = index+1;
-		var variantMin = min + range*num/2;
-		var variantMax = variantMin + range;
-		if (depth >= variantMin && depth <= variantMax) { /* variant within range */
-			available.push({def:def, variant: num}); 
-		}
-		if (depth > variantMax && index+1 == def.variants.length) { /* past max variant range */
-			available.push({def:def, variant: num});
-		}
-	});
+	if (def.variants) { /* pick available variants */
+		var range = def.diff - min;
+
+		def.variants.forEach((variant, index) => {
+			var variantIndex = index+1;
+			var variantMin = min + (variantIndex) * range;
+			var variantMax = (variantIndex == def.variants.length ? Infinity : variantMin + 2*range);
+			if (depth < variantMin || depth > variantMax) { return; }
+
+			available.push({
+				def: def,
+				variant: variantIndex,
+				difficulty: variantMin+range
+			});
+		});
+
+	} else { /* pick just the starting one */
+		available.push({
+			def: def,
+			variant: 0,
+			difficulty: def.diff
+		});
+ 	}
 }
 
 
@@ -156,120 +171,5 @@ Being.prototype.doAttack = function(attack) {
 	}
 
 	return result;
-
 }
 
-Being.ALL = [
-	{
-		visual: {
-			name: "Goblin",
-			ch: "g",
-			color: [20, 250, 20]
-		},
-		variants: ["{} Chieftain", "Large {}", "{} King"],
-		max: 6
-	}, {
-		visual: {
-			name: "Rat",
-			ch: "r",
-			color: [150, 100, 20]
-		},
-		variants: ["Giant {}"],
-		max: 6
-	}, {
-		visual: {
-			name: "Bat",
-			ch: "b",
-			color: [180, 180, 180]
-		},
-		variants: ["Giant {}"],
-		max: 6
-	}, {
-		visual: {
-			name: "Dog",
-			ch: "d",
-			color: [180, 160, 100]
-		},
-		variants: ["Large {}"],
-		max: 6
-	}, {
-		visual: {
-			name: "Pangolin",
-			ch: "p",
-			color: [150, 100, 20]
-		},
-		variants: ["Giant {}"],
-		min: 3,
-		max: 10
-	}, {
-		visual: {
-			name: "Orc",
-			ch: "o",
-			color: [20, 150, 20]
-		},
-		variants: ["Large {}", "{} Leader"],
-		min: 5,
-		max: 12
-	}, {
-		visual: {
-			name: "Ogre",
-			ch: "O",
-			color: [20, 20, 200]
-		},
-		variants: ["{} Magus", "{} King"],
-		min: 6,
-		max: 14
-	}, {
-		visual: {
-			name: "Carnivorous gelatine",
-			ch: "j",
-			color: [240, 20, 240]
-		},
-		min: 5,
-		max: 20
-	}, {
-		visual: {
-			name: "Beetle",
-			ch: "i"
-		},
-		variants: ["Large {}"],
-		min: 4,
-		max: 14 
-	}, {
-		visual: {
-			name: "Lizard",
-			ch: "l"
-		},
-		variants: ["Large {}"],
-		min: 5,
-		max: 15
-	}, {
-		visual: {
-			name: "Elemental",
-			ch: "e"
-		},
-		variants: ["Large {}"],
-		min: 10,
-		max: 20
-	}, {
-		visual: {
-			name: "Dragon",
-			ch: "D",
-			color: [250, 230, 20]
-		},
-		min: 12
-	}, {
-		visual: {
-			name: "Dragon",
-			ch: "D"
-		},
-		min: 12
-	}, {
-		visual: {
-			name: "Hydra",
-			ch: "H",
-			color: [200, 150, 20]
-		},
-		min: 15
-	}
-];

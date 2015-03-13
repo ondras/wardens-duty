@@ -120,10 +120,28 @@ Shopkeeper.ALL = [
 				}
 			}
 		]
+	}, {
+		name: "Elemental scholar",
+		items: [
+			{
+				name: "fire training",
+				outcome: {
+					gold: -Rules.getResistanceCost(),
+					fire: Rules.getResistanceStrength()
+				}
+			}, {
+				name: "water training",
+				outcome: {
+					gold: -Rules.getResistanceCost(),
+					water: Rules.getResistanceStrength()
+				}
+			}, {
+				name: "poison training",
+				outcome: {
+					gold: -Rules.getResistanceCost(),
+					poison: Rules.getResistanceStrength()
+				}
+			}
+		]
 	}
 ];
-
-/* 
-    ammo: 1, 2, 3 arrows
-    ESTE NECO FIXME
- */
