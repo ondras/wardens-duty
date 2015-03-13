@@ -27,7 +27,7 @@ var Stats = {
 	},
 	"gold": {
 		label: "Gold",
-		color: [250, 230, 20],
+		color: [230, 200, 20],
 		def: 0
 	},
 	"ammo": {

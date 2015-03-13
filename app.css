@@ -113,7 +113,7 @@
   text-align: center;
   padding-top: 2rem;
 }
-.entity span {
+.entity > span {
   font-size: 12rem;
   font-weight: bold;
   background-color: rgba(0, 0, 0, 0.75);
@@ -121,6 +121,17 @@
   border-radius: 0.3em 0.3em 0 0;
   padding: 1rem;
   transition: color 1s;
+  position: relative;
+}
+.entity > span .more {
+  position: absolute;
+  left: 1.3ch;
+  bottom: -1rem;
+}
+.entity > span .more span {
+  padding: 0.5em;
+  font-size: 1rem;
+  background-color: rgba(0, 0, 0, 0.75);
 }
 .gauge {
   display: inline-block;

@@ -29,7 +29,7 @@ var Stats = {
 	},
 	gold: {
 		label: "Gold",
-		color: [250, 230, 20],
+		color: [230, 200, 20],
 		def: 0
 	},
 	ammo: {
@@ -78,7 +78,7 @@ var Cell = function Cell(level, position, minimap) {
 	this._position = position;
 	this._minimap = minimap;
 
-	this._entity = null;
+	this._entities = [];
 	this._current = 0;
 	this._done = false;
 	this._blocking = false;
@@ -88,10 +88,12 @@ var Cell = function Cell(level, position, minimap) {
 		node: document.createElement("div"),
 		entity: document.createElement("div"),
 		info: document.createElement("div"),
+		label: document.createElement("div"),
 		attacks: document.createElement("div"),
 		gauges: document.createElement("div"),
 		confirm: document.createElement("div")
 	};
+	this._build();
 };
 
 Cell.prototype = {
@@ -116,8 +118,8 @@ Cell.prototype = {
 	},
 
 	addEntity: function addEntity(entity) {
-		this._entity = entity;
-		this._build();
+		this._entities.push(entity);
+		this._buildEntity();
 	},
 
 	resize: function resize(w, h) {
@@ -140,7 +142,7 @@ Cell.prototype = {
 			return;
 		}
 
-		this._attacks = this._entity.getAttacks();
+		this._attacks = this._entities[0].getAttacks();
 		this._buildAttacks();
 
 		if (this._current >= this._attacks.length) {
@@ -180,35 +182,56 @@ Cell.prototype = {
 	},
 
 	_build: function _build() {
-		var entity = this._entity;
-
 		this._dom.node.classList.add("cell");
 		this._dom.entity.classList.add("entity");
 		this._dom.info.classList.add("info");
+		this._dom.label.classList.add("label");
 		this._dom.attacks.classList.add("attacks");
 		this._dom.gauges.classList.add("gauges");
 		this._dom.confirm.classList.add("confirm");
 
-		/* entity */
+		this._dom.node.appendChild(this._dom.entity);
+		this._dom.node.appendChild(this._dom.info);
+	},
+
+	_buildEntity: function _buildEntity() {
+		var first = this._entities[0];
+		this._dom.entity.innerHTML = "";
+
+		/* char(s) */
 		var ch = document.createElement("span");
-		var visual = entity.getVisual();
+		var visual = first.getVisual();
 		ch.innerHTML = visual.ch;
 		ch.style.color = ROT.Color.toRGB(visual.color);
 		this._dom.entity.appendChild(ch);
-		this._dom.node.appendChild(this._dom.entity);
+
+		if (this._entities.length > 1) {
+			var more = document.createElement("span");
+			more.classList.add("more");
+			ch.appendChild(more);
+			this._entities.slice(1).forEach(function (entity) {
+				var vis = entity.getVisual();
+				var span = document.createElement("span");
+				span.innerHTML = vis.ch;
+				span.style.color = ROT.Color.toRGB(vis.color);
+				more.appendChild(span);
+			});
+		}
 
 		this._minimap.set(this._position[0], this._position[1], visual.ch, ch.style.color);
 
 		/* label */
-		var label = document.createElement("div");
-		label.classList.add("label");
-		label.innerHTML = "<span>" + visual.name + "</span>";
-		this._dom.info.appendChild(label);
+		this._dom.label.innerHTML = "<span>" + visual.name + "</span>";
 
-		/* main control UI */
+		/* info parts */
+		this._dom.info.classList.remove("done");
+		this._dom.info.innerHTML = "";
+		this._dom.info.appendChild(this._dom.label);
 		this._dom.info.appendChild(this._dom.attacks);
 		this._dom.info.appendChild(this._dom.gauges);
-		this._dom.node.appendChild(this._dom.info);
+
+		this._current = 0;
+		this.syncAttacks();
 	},
 
 	_buildGauge: function _buildGauge(node, stats, outcome, type) {
@@ -266,7 +289,7 @@ Cell.prototype = {
 	},
 
 	_isAttackDisabled: function _isAttackDisabled(id) {
-		var outcome = this._entity.computeOutcome(id);
+		var outcome = this._entities[0].computeOutcome(id);
 		var stats = pc.getStats();
 
 		if (this._getNewValue(stats, outcome, "hp") <= 0) {
@@ -295,7 +318,7 @@ Cell.prototype = {
 		attack.node.classList.add("active");
 		attack.node.appendChild(this._dom.confirm);
 
-		var outcome = this._entity.computeOutcome(attack.id);
+		var outcome = this._entities[0].computeOutcome(attack.id);
 		var stats = pc.getStats();
 
 		var box1 = document.createElement("div");
@@ -337,7 +360,7 @@ Cell.prototype = {
 
 	_doAttack: function _doAttack() {
 		var id = this._attacks[this._current].id;
-		var result = this._entity.doAttack(id);
+		var result = this._entities[0].doAttack(id);
 
 		this._dom.info.classList.add("done");
 		this._dom.entity.querySelector("span").style.color = "#000";
@@ -350,16 +373,24 @@ Cell.prototype = {
 			this._dom.info.innerHTML = "" + result + "<p>Press <strong>Enter</strong> to continue.</p>";
 			this._blocking = true;
 		} else {
-			/* pass control back to level */
+			/* this entity is finally done */
 			this._finalize();
 		}
 	},
 
 	_finalize: function _finalize() {
+		this._entities.shift();
 		this._blocking = false;
-		this._done = true;
-		this._dom.info.innerHTML = "";
-		this._level.checkLevelOver();
+
+		if (this._entities.length) {
+			/* work, work */
+			this._buildEntity();
+		} else {
+			/* pass control back to level */
+			this._done = true;
+			this._dom.info.innerHTML = "";
+			this._level.checkLevelOver();
+		}
 	}
 };
 "use strict";
@@ -793,7 +824,7 @@ Level.create = function (depth) {
 Level.data = {
 	fontSize: 24,
 	lineHeight: 1,
-	fontFamily: "serif",
+	fontFamily: "deja vu serif, verdana",
 	elementalAnnounced: false,
 	shopAnnounced: false
 };
@@ -1061,6 +1092,10 @@ Level._createIntro = function (depth) {
 		intro = "" + intro + "<p>You would not believe this! Some cells are \n\t\toccupied by regular shopkeepers who decided to start their \n\t\tbusiness here. Well, laissez-faire, as they say.</p>";
 	}
 
+	if (Rules.getEntityCount(depth) == 10) {
+		intro = "" + intro + "<p>These deep prison levels are so crowded that some cells \n\t\teven contain multiple monsters! Fortunately, you can deal with them\n\t\tone at a time.</p>";
+	}
+
 	intro = "" + intro + "<p class=\"sign\">Yours,<br/>O.</p>";
 
 	if (depth >= 3) {
@@ -1130,7 +1165,7 @@ var Rules = {
 		} else if (depth <= 10) {
 			return 6;
 		} else {
-			return 9;
+			return 9 * 3;
 		}
 	},
 
@@ -1345,7 +1380,7 @@ var Chest = function Chest(depth) {
 	this._damage = Rules.getChestDamage(depth);
 
 	var name = "T" + (this._trapped ? "rapped t" : "") + "reasure chest";
-	Entity.call(this, { ch: "$", color: [250, 230, 20], name: name });
+	Entity.call(this, { ch: "$", color: Stats.gold.color, name: name });
 };
 Chest.prototype = Object.create(Entity.prototype);
 
@@ -1619,7 +1654,7 @@ var Game = function Game() {
 
 Game.prototype = {
 	nextLevel: function nextLevel() {
-		var depth = this._level ? this._level.getDepth() : 0;
+		var depth = this._level ? this._level.getDepth() : 10;
 		depth++;
 
 		var w = window.innerWidth;

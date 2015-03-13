@@ -5,7 +5,7 @@ var Chest = function(depth) {
 	this._damage = Rules.getChestDamage(depth);
 
 	var name = `T${this._trapped ? "rapped t" : ""}reasure chest`;
-	Entity.call(this, {ch:"$", color: [250, 230, 20], name: name});
+	Entity.call(this, {ch:"$", color: Stats.gold.color, name: name});
 }
 Chest.prototype = Object.create(Entity.prototype);
 

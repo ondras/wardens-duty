@@ -28,7 +28,7 @@ var Rules = {
 		} else if (depth <= 10) {
 			return 6;
 		} else {
-			return 9;
+			return 9*3;
 		}
 	},
 

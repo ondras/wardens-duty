@@ -2,7 +2,7 @@
 	text-align: center;
 	padding-top: 2rem;
 
-	span {
+	& > span {
 		font-size: 12rem;
 		font-weight: bold;
 		background-color: @bg;
@@ -10,5 +10,18 @@
 		border-radius: 0.3em 0.3em 0 0;
 		padding: 1rem;
 		transition: color 1s;
+		position: relative;
+
+		.more {
+			position: absolute;
+			left: 1.3ch;
+			bottom: -1rem;
+
+			span {
+				padding: 0.5em;
+				font-size: 1rem;
+				background-color: @bg;
+			}
+		}
 	}
 }

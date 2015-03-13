@@ -67,7 +67,7 @@ Level.create = function(depth) {
 Level.data = {
 	fontSize: 24,
 	lineHeight: 1,
-	fontFamily: "serif",
+	fontFamily: "deja vu serif, verdana",
 	elementalAnnounced: false,
 	shopAnnounced: false
 }
@@ -318,6 +318,12 @@ Level._createIntro = function(depth) {
 		intro = `${intro}<p>You would not believe this! Some cells are 
 		occupied by regular shopkeepers who decided to start their 
 		business here. Well, laissez-faire, as they say.</p>`;
+	}
+
+	if (Rules.getEntityCount(depth) == 10) {
+		intro = `${intro}<p>These deep prison levels are so crowded that some cells 
+		even contain multiple monsters! Fortunately, you can deal with them
+		one at a time.</p>`
 	}
 	
 	intro = `${intro}<p class="sign">Yours,<br/>O.</p>`;

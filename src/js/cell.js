@@ -3,7 +3,7 @@ var Cell = function(level, position, minimap) {
 	this._position = position;
 	this._minimap = minimap;
 
-	this._entity = null;
+	this._entities = [];
 	this._current = 0;
 	this._done = false;
 	this._blocking = false;
@@ -13,10 +13,12 @@ var Cell = function(level, position, minimap) {
 		node: document.createElement("div"),
 		entity: document.createElement("div"),
 		info: document.createElement("div"),
+		label: document.createElement("div"),
 		attacks: document.createElement("div"),
 		gauges: document.createElement("div"),
 		confirm: document.createElement("div")
 	}
+	this._build();
 }
 
 Cell.prototype = {
@@ -41,8 +43,8 @@ Cell.prototype = {
 	},
 	
 	addEntity(entity) {
-		this._entity = entity;
-		this._build();
+		this._entities.push(entity);
+		this._buildEntity();
 	},
 
 	resize(w, h) {
@@ -61,7 +63,7 @@ Cell.prototype = {
 	syncAttacks() {
 		if (this._done) { return; }
 
-		this._attacks = this._entity.getAttacks();
+		this._attacks = this._entities[0].getAttacks();
 		this._buildAttacks();
 
 		if (this._current >= this._attacks.length) { 
@@ -95,35 +97,56 @@ Cell.prototype = {
 	},
 
 	_build() {
-		var entity = this._entity;
-
 		this._dom.node.classList.add("cell");
 		this._dom.entity.classList.add("entity");
 		this._dom.info.classList.add("info");
+		this._dom.label.classList.add("label");
 		this._dom.attacks.classList.add("attacks");
 		this._dom.gauges.classList.add("gauges");
 		this._dom.confirm.classList.add("confirm");
 
-		/* entity */
+		this._dom.node.appendChild(this._dom.entity);
+		this._dom.node.appendChild(this._dom.info);
+	},
+
+	_buildEntity() {
+		var first = this._entities[0];
+		this._dom.entity.innerHTML = "";
+
+		/* char(s) */
 		var ch = document.createElement("span");
-		var visual = entity.getVisual();
+		var visual = first.getVisual();
 		ch.innerHTML = visual.ch;
 		ch.style.color = ROT.Color.toRGB(visual.color);
 		this._dom.entity.appendChild(ch);
-		this._dom.node.appendChild(this._dom.entity);
+
+		if (this._entities.length > 1) {
+			var more = document.createElement("span");
+			more.classList.add("more");
+			ch.appendChild(more);
+			this._entities.slice(1).forEach(entity => {
+				var vis = entity.getVisual();
+				var span = document.createElement("span");
+				span.innerHTML = vis.ch;
+				span.style.color = ROT.Color.toRGB(vis.color);
+				more.appendChild(span);
+			});
+		}
 
 		this._minimap.set(this._position[0], this._position[1], visual.ch, ch.style.color);
 
 		/* label */
-		var label = document.createElement("div");
-		label.classList.add("label");
-		label.innerHTML = `<span>${visual.name}</span>`;
-		this._dom.info.appendChild(label);
+		this._dom.label.innerHTML = `<span>${visual.name}</span>`;
 
-		/* main control UI */
+		/* info parts */
+		this._dom.info.classList.remove("done");
+		this._dom.info.innerHTML = "";
+		this._dom.info.appendChild(this._dom.label);
 		this._dom.info.appendChild(this._dom.attacks);
 		this._dom.info.appendChild(this._dom.gauges);
-		this._dom.node.appendChild(this._dom.info);
+
+		this._current = 0;
+		this.syncAttacks();
 	},
 
 	_buildGauge(node, stats, outcome, type) {
@@ -177,7 +200,7 @@ Cell.prototype = {
 	},
 
 	_isAttackDisabled(id) {
-		var outcome = this._entity.computeOutcome(id);
+		var outcome = this._entities[0].computeOutcome(id);
 		var stats = pc.getStats();
 		
 		if (this._getNewValue(stats, outcome, "hp") <= 0) { return true; }
@@ -198,7 +221,7 @@ Cell.prototype = {
 		attack.node.classList.add("active");
 		attack.node.appendChild(this._dom.confirm);
 
-		var outcome = this._entity.computeOutcome(attack.id);
+		var outcome = this._entities[0].computeOutcome(attack.id);
 		var stats = pc.getStats();
 
 		var box1 = document.createElement("div");
@@ -240,7 +263,7 @@ Cell.prototype = {
 	
 	_doAttack() {
 		var id = this._attacks[this._current].id;
-		var result = this._entity.doAttack(id);
+		var result = this._entities[0].doAttack(id);
 
 		this._dom.info.classList.add("done");
 		this._dom.entity.querySelector("span").style.color = "#000";
@@ -251,15 +274,21 @@ Cell.prototype = {
 		if (result) { /* we need to show this text and wait for a confirmation */
 			this._dom.info.innerHTML = `${result}<p>Press <strong>Enter</strong> to continue.</p>`;
 			this._blocking = true;
-		} else { /* pass control back to level */
+		} else { /* this entity is finally done */
 			this._finalize();
 		}
 	},
 
 	_finalize() {
+		this._entities.shift();
 		this._blocking = false;
-		this._done = true;
-		this._dom.info.innerHTML = "";
-		this._level.checkLevelOver();
+
+		if (this._entities.length) { /* work, work */
+			this._buildEntity();
+		} else { /* pass control back to level */
+			this._done = true;
+			this._dom.info.innerHTML = "";
+			this._level.checkLevelOver();
+		}
 	}
 }

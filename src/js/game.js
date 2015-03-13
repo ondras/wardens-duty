@@ -13,7 +13,7 @@ var Game = function() {
 
 Game.prototype = {
 	nextLevel() {
-		var depth = (this._level ? this._level.getDepth() : 0);
+		var depth = (this._level ? this._level.getDepth() : 10);
 		depth++;
 		
 		var w = window.innerWidth;
