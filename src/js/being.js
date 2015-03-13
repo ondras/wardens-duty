@@ -2,8 +2,11 @@ var Being = function(difficulty, visual, element) {
 	Entity.call(this, visual);
 	this._difficulty = difficulty;
 	this._element = element;
+	
 	this._arrows = Rules.getArrows();
 	this._gold = Rules.getGoldGain(difficulty);
+	if (this._element) { this._resistance = Rules.getResistanceGain(); }
+
 }
 Being.prototype = Object.create(Entity.prototype);
 
@@ -13,7 +16,7 @@ Being.create = function(depth, element) {
 
 	if (depth == 1) { 
 		visual = Bestiary[0].visual;
-		difficulty = Bestiary[0].difficulty;
+		difficulty = Bestiary[0].diff;
 	} else {
 		var avail = [];
 		Bestiary.forEach(def => this._availableVariants(avail, depth, def, element));
@@ -49,6 +52,14 @@ Being._availableVariants = function(available, depth, def, element) {
 
 	if (def.variants) { /* pick available variants */
 		var range = def.diff - min;
+
+		if (depth <= min+2*range) { /* add base version */
+			available.push({
+				def: def,
+				variant: 0,
+				difficulty: def.diff
+			});
+		}
 
 		def.variants.forEach((variant, index) => {
 			var variantIndex = index+1;
@@ -116,7 +127,7 @@ Being.prototype.computeOutcome = function(attack) {
 	outcome["gold"] = this._gold;
 	
 	if (this._element) {
-		outcome[this._element] = Rules.getResistanceGain();
+		outcome[this._element] = this._resistance;
 	}
 
 	switch (attack) {

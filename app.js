@@ -463,8 +463,12 @@ var Being = function Being(difficulty, visual, element) {
 	Entity.call(this, visual);
 	this._difficulty = difficulty;
 	this._element = element;
+
 	this._arrows = Rules.getArrows();
 	this._gold = Rules.getGoldGain(difficulty);
+	if (this._element) {
+		this._resistance = Rules.getResistanceGain();
+	}
 };
 Being.prototype = Object.create(Entity.prototype);
 
@@ -476,7 +480,7 @@ Being.create = function (depth, element) {
 
 	if (depth == 1) {
 		visual = Bestiary[0].visual;
-		difficulty = Bestiary[0].difficulty;
+		difficulty = Bestiary[0].diff;
 	} else {
 		var avail = [];
 		Bestiary.forEach(function (def) {
@@ -522,6 +526,15 @@ Being._availableVariants = function (available, depth, def, element) {
 	if (def.variants) {
 		/* pick available variants */
 		var range = def.diff - min;
+
+		if (depth <= min + 2 * range) {
+			/* add base version */
+			available.push({
+				def: def,
+				variant: 0,
+				difficulty: def.diff
+			});
+		}
 
 		def.variants.forEach(function (variant, index) {
 			var variantIndex = index + 1;
@@ -594,7 +607,7 @@ Being.prototype.computeOutcome = function (attack) {
 	outcome.gold = this._gold;
 
 	if (this._element) {
-		outcome[this._element] = Rules.getResistanceGain();
+		outcome[this._element] = this._resistance;
 	}
 
 	switch (attack) {
@@ -978,7 +991,7 @@ Level._createIntro = function (depth) {
 	var intro = "";
 
 	if (depth == 1) {
-		intro = "<p>welcome to the prison. As you might have already noticed, \n\t\tall our cells are full. You really need to take fix that.</p>\n\t\t<p>This first level has just one cell. Taking care about that goblin\n\t\tthere shall be an easy task. Just press the <strong>↓</strong> \n\t\t(or <strong>s</strong>) key to move around and do what you must.</p>\n\t\t<p>By the way: you will see your own stats below each enemy.</p>\n\t\t";
+		intro = "<p>welcome to the prison. As you might have already noticed, \n\t\tall our cells are full. You really need to fix that.</p>\n\t\t<p>This first level has just one cell. Taking care about that goblin\n\t\tthere shall be an easy task. Just press the <strong>↓</strong> \n\t\t(or <strong>s</strong>) key to move around and do what you must.</p>\n\t\t<p>By the way: you will see your own stats below each enemy.</p>\n\t\t";
 	} else if (depth == 2) {
 		intro = "<p>good job! Welcome to prison level " + depth + ". The cells \n\t\there are full as well. \n\t\t<p>You can now pick from multiple ways to deal with your enemies.\n\t\tAlso, this level has two cells and both need to be cleared. \n\t\tTo move around, use <strong>←→↑↓</strong> or \n\t\t<strong>WASD</strong> or <strong>HJKL</strong> keys.</p>\n\t\t";
 	} else {
@@ -986,13 +999,17 @@ Level._createIntro = function (depth) {
 	}
 
 	if (depth == 3) {
-		intro = "" + intro + "<p>Keep an eye on your Experience bar. \n\t\tWhen it fills up, you gain an experience level -- do I really \n\t\tneed to explain that in more detail?</p>\n\t\t<p>As you descend deeper, the number of cells will increase. \n\t\tThey can be also located in multiple rows.</p> \n\t\t";
+		intro = "" + intro + "<p>Keep an eye on your Experience bar. \n\t\tWhen it fills up, you gain an experience level -- do I really \n\t\tneed to explain that in more detail?</p>";
 	} else if (Rules.isLevelElemental(depth) && !this.data.elementalAnnounced) {
 		this.data.elementalAnnounced = true;
 		intro = "" + intro + "<p>Some levels have strong elemental attunement. \n\t\tKeep an eye on these prisoners and try to approach them wisely.</p>";
 	} else if (Rules.isLevelShop(depth) && !this.data.shopAnnounced) {
 		this.data.shopAnnounced = true;
 		intro = "" + intro + "<p>You would not believe this! Some cells are \n\t\toccupied by regular shopkeepers who decided to start their \n\t\tbusiness here. Well, laissez-faire, as they say.</p>";
+	}
+
+	if (depth == 6) {
+		intro = "" + intro + "<p>As you descend deeper, the number of cells will increase. \n\t\tThey can be also located in multiple rows.</p>";
 	}
 
 	if (Rules.getEntityCount(depth) == 10) {
@@ -1042,7 +1059,10 @@ var Rules = {
 	/* = Generating stuff = */
 
 	getBeingDifficulty: function getBeingDifficulty(difficulty, depth) {
-		return Math.round(difficulty + depth / 4);
+		if (depth <= 2) {
+			return depth;
+		}
+		return Math.round((difficulty + depth) / 2);
 	},
 
 	isChestTrapped: function isChestTrapped(depth) {
@@ -1114,7 +1134,7 @@ var Rules = {
 	/* = Elemental stuff = */
 
 	getResistanceGain: function getResistanceGain() {
-		return 3;
+		return ROT.RNG.getUniformInt(0, 2);
 	},
 
 	getElementalPenalty: function getElementalPenalty() {

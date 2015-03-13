@@ -3,7 +3,8 @@ var Rules = {
 	/* = Generating stuff = */
 
 	getBeingDifficulty(difficulty, depth) {
-		return Math.round(difficulty + depth/4);
+		if (depth <= 2) { return depth; }
+		return Math.round((difficulty+depth)/2);
 	},
 	
 	isChestTrapped(depth) {
@@ -73,7 +74,7 @@ var Rules = {
 	/* = Elemental stuff = */
 
 	getResistanceGain() {
-		return 3;
+		return ROT.RNG.getUniformInt(0, 2);
 	},
 
 	getElementalPenalty() {

@@ -284,7 +284,7 @@ Level._createIntro = function(depth) {
 	
 	if (depth == 1) {
 		intro = `<p>welcome to the prison. As you might have already noticed, 
-		all our cells are full. You really need to take fix that.</p>
+		all our cells are full. You really need to fix that.</p>
 		<p>This first level has just one cell. Taking care about that goblin
 		there shall be an easy task. Just press the <strong>↓</strong> 
 		(or <strong>s</strong>) key to move around and do what you must.</p>
@@ -305,10 +305,7 @@ Level._createIntro = function(depth) {
 	if (depth == 3) {
 		intro = `${intro}<p>Keep an eye on your Experience bar. 
 		When it fills up, you gain an experience level -- do I really 
-		need to explain that in more detail?</p>
-		<p>As you descend deeper, the number of cells will increase. 
-		They can be also located in multiple rows.</p> 
-		`;
+		need to explain that in more detail?</p>`;
 	} else if (Rules.isLevelElemental(depth) && !this.data.elementalAnnounced) {
 		this.data.elementalAnnounced = true;
 		intro = `${intro}<p>Some levels have strong elemental attunement. 
@@ -318,6 +315,11 @@ Level._createIntro = function(depth) {
 		intro = `${intro}<p>You would not believe this! Some cells are 
 		occupied by regular shopkeepers who decided to start their 
 		business here. Well, laissez-faire, as they say.</p>`;
+	}
+
+	if (depth == 6) {
+		intro = `${intro}<p>As you descend deeper, the number of cells will increase. 
+		They can be also located in multiple rows.</p>`;
 	}
 
 	if (Rules.getEntityCount(depth) == 10) {
