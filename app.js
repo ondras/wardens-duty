@@ -1678,8 +1678,8 @@ var Bestiary = [{
 	diff: 8
 }, {
 	visual: {
-		name: "Bandit",
-		ch: "b",
+		name: "Outlaw",
+		ch: "t",
 		color: [70, 70, 70]
 	},
 	diff: 5
