@@ -996,7 +996,7 @@ Level._createIntro = function (depth) {
 	var intro = "";
 
 	if (depth == 1) {
-		intro = "<p>welcome to the prison. As you might have already noticed, \n\t\tall our cells are full. You really need to fix that.</p>\n\t\t<p>This first level has just one cell. Taking care about that goblin\n\t\tthere shall be an easy task. Just press the <strong>↓</strong> \n\t\t(or <strong>s</strong>) key to move around and do what you must.</p>\n\t\t<p>By the way: you will see your own stats below each enemy.</p>\n\t\t";
+		intro = "<p>welcome to the prison. As you might have already noticed, \n\t\tall our cells are full. You really need to fix that.</p>\n\t\t<p>This first level has just one cell. Taking care of that goblin\n\t\tthere shall be an easy task. Just press the <strong>↓</strong> \n\t\t(or <strong>s</strong>) key to move around and do what you must.</p>\n\t\t<p>By the way: you will see your own stats below each enemy.</p>\n\t\t";
 	} else if (depth == 2) {
 		intro = "<p>good job! Welcome to prison level " + depth + ". The cells \n\t\there are full as well. \n\t\t<p>You can now pick from multiple ways to deal with your enemies.\n\t\tAlso, this level has two cells and both need to be cleared. \n\t\tTo move around, use <strong>←→↑↓</strong> or \n\t\t<strong>WASD</strong> or <strong>HJKL</strong> keys.</p>\n\t\t";
 	} else {
@@ -1930,7 +1930,7 @@ Game.prototype = {
 		var node = this._dom.intro;
 		node.id = "intro";
 
-		node.innerHTML = "<h1>Warden's Duty</h1>\n\t\t\t<p>The game you are about to play is a 7DRL. It was created \n\t\t\tin a limited time, might exhibit strange bugs and some \n\t\t\tsay it contains <em>roguelike</em> (‽) elements. \n\t\t\tYou will encounter goblins, rats, dragons, pangolins and \n\t\t\tmaybe even a lutefisk.\n\t\t\t<a href=\"https://www.youtube.com/watch?v=6dNAbb7vKjY\">Be prepared.</a></p>\n\t\t\t\n\t\t\t<p>Warden't Duty was created by \n\t\t\t<a href=\"http://ondras.zarovi.cz/\">Ondřej Žára</a> and the \n\t\t\tcomplete source code is available on\n\t\t\t<a href=\"https://github.com/ondras/wardens-duty\">GitHub</a>.\n\t\t\tIf you find the game's layout broken, try adjusting your window\n\t\t\tto be more <em>widescreen</em>, i.e. considerably wider than it is tall.</p>\n\t\t\t\n\t\t\t<p>To start the game, please press <strong>Enter</strong>.</p> \n\t\t";
+		node.innerHTML = "<h1>Warden's Duty</h1>\n\t\t\t<p>The game you are about to play is a 7DRL. It was created \n\t\t\tin a limited time, might exhibit strange bugs and some \n\t\t\tsay it contains <em>roguelike</em> (‽) elements. \n\t\t\tYou will encounter goblins, rats, dragons, pangolins and \n\t\t\tmaybe even a lutefisk.\n\t\t\t<a href=\"https://www.youtube.com/watch?v=6dNAbb7vKjY\">Be prepared.</a></p>\n\t\t\t\n\t\t\t<p>Warden's Duty was created by \n\t\t\t<a href=\"http://ondras.zarovi.cz/\">Ondřej Žára</a> and the \n\t\t\tcomplete source code is available on\n\t\t\t<a href=\"https://github.com/ondras/wardens-duty\">GitHub</a>.\n\t\t\tIf you find the game's layout broken, try adjusting your window\n\t\t\tto be more <em>widescreen</em>, i.e. considerably wider than it is tall.</p>\n\t\t\t\n\t\t\t<p>To start the game, please press <strong>Enter</strong>.</p> \n\t\t";
 		document.body.appendChild(node);
 
 		window.addEventListener("keydown", this);
