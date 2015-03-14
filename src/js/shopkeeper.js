@@ -8,8 +8,17 @@ var Shopkeeper = function(name, items) {
 Shopkeeper.prototype = Object.create(Entity.prototype);
 
 Shopkeeper.create = function(depth) {
-	var def = this.ALL.random();
-	return new this(def.name, def.items);
+	if (ROT.RNG.getUniform() > 0.9) {
+		var all = [];
+		this.ALL.forEach(def => {
+			def.items.forEach(item => all.push(item));
+		});
+		all = all.randomize();
+		return new this("C.M.O.T. Dibbler", all.slice(0, 3));
+	} else {
+		var def = this.ALL.random();
+		return new this(def.name, def.items);
+	}
 }
 
 Shopkeeper.prototype.getAttacks = function() {

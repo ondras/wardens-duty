@@ -1007,10 +1007,10 @@ Level._createIntro = function (depth) {
 		intro = "" + intro + "<p>Keep an eye on your Experience bar. \n\t\tWhen it fills up, you gain an experience level, improving your stats and \n\t\t-- do I really need to explain that in more detail?</p>";
 	} else if (Rules.isLevelElemental(depth) && !this.data.elementalAnnounced) {
 		this.data.elementalAnnounced = true;
-		intro = "" + intro + "<p>Some levels have strong elemental attunement. \n\t\tKeep an eye on these prisoners and try to approach them wisely.</p>";
+		intro = "" + intro + "<p>A few levels have strong elemental attunement. \n\t\tKeep an eye on these prisoners and try to approach them wisely.</p>";
 	} else if (Rules.isLevelShop(depth) && !this.data.shopAnnounced) {
 		this.data.shopAnnounced = true;
-		intro = "" + intro + "<p>You would not believe this! Some cells are \n\t\toccupied by regular shopkeepers who decided to start their \n\t\tbusiness here. Well, laissez-faire, as they say.</p>";
+		intro = "" + intro + "<p>You would not believe this! A few cells are \n\t\toccupied by regular shopkeepers who decided to start their \n\t\tbusiness here. Well, laissez-faire, as they say.</p>";
 	}
 
 	if (depth == 6) {
@@ -1018,7 +1018,7 @@ Level._createIntro = function (depth) {
 	}
 
 	if (Rules.getEntityCount(depth) == 10) {
-		intro = "" + intro + "<p>These deep prison levels are so crowded that some cells \n\t\teven contain multiple monsters! Fortunately, you can deal with them\n\t\tone at a time.</p>";
+		intro = "" + intro + "<p>These deep prison levels are so crowded that a cell \n\t\tmight even contain multiple monsters! Fortunately, you can deal with them\n\t\tone at a time.</p>";
 	}
 
 	intro = "" + intro + "<p class=\"sign\">Yours,<br/>O.</p>";
@@ -1031,7 +1031,7 @@ Level._createIntro = function (depth) {
 	return "<p>Warden,</p>" + intro;
 };
 
-Level._ps = ["trapped chests are dangerous", "trapped chests are cool", "eating lutefisk is risky", "elemental resistance is important", "elemental resistance is useless", "fire fox is stronger than goo gel", "goo gel is stronger than fire fox", "you should not trust people", "you should not trust goblins", "deeper prison levels have tougher enemies", "deeper prison levels have more cells", "there is no way out of this prison", "being a warden is cool", "being a warden is risky", "wardens are well paid", "wardens are poorly paid", "captured goldfish may give you a wish", "coffee is hard to beat", "dragons are dangerous", "pangolins are dangerous", "you should keep an eye on your health", "you should keep an eye on your mana", "you should have some ammunition ready", "you shall not fight fire with fire", "you shall not fight water with water", "you shall fight water with fire", "you shall fight fire with water", "arrows are rare", "unicorns are rare", "roses are red, but not in prison", "resistance is futile", "this game is a roguelike", "this game is a roguelite", "there is no save/load in a prison", "levelling up is better than sex", "some shopkeepers are selling stolen goods", "ranged attacks can save your life", "some treasure chests are trapped", "there is a golden treasure hidden somewhere in the prison", ""].randomize();
+Level._ps = ["trapped chests are dangerous", "trapped chests are cool", "eating lutefisk is risky", "elemental resistance is important", "elemental resistance is useless", "fire fox is stronger than goo gel", "goo gel is stronger than fire fox", "you should not trust people", "you should not trust goblins", "deeper prison levels have tougher enemies", "deeper prison levels have more cells", "there is no way out of this prison", "being a warden is cool", "being a warden is risky", "wardens are well paid", "wardens are poorly paid", "captured goldfish may give you a wish", "coffee is hard to beat", "dragons are dangerous", "pangolins are dangerous", "you should keep an eye on your health", "you should keep an eye on your mana", "you should have some ammunition ready", "you shall not fight fire with fire", "you shall not fight water with water", "you shall fight water with fire", "you shall fight fire with water", "arrows are rare", "unicorns are rare", "roses are red, but not in prison", "resistance is futile", "this game is a roguelike", "this game is a roguelite", "there is no save/load in a prison", "levelling up is better than sex", "some shopkeepers are selling stolen goods", "ranged attacks can save your life", "some treasure chests are trapped", "there is a golden treasure hidden somewhere in the prison", "He created this game in seven days"].randomize();
 "use strict";
 
 var Debug = function Debug() {
@@ -1186,7 +1186,7 @@ var Rules = {
 	/* = Elemental stuff = */
 
 	getResistanceGain: function getResistanceGain() {
-		return ROT.RNG.getUniformInt(0, 2);
+		return ROT.RNG.getUniformInt(0, 3);
 	},
 
 	getElementalPenalty: function getElementalPenalty() {
@@ -1208,7 +1208,7 @@ var Rules = {
 	},
 
 	getTrainingCost: function getTrainingCost() {
-		return 10;
+		return 8;
 	},
 
 	getTrainingStrength: function getTrainingStrength() {
@@ -1224,7 +1224,7 @@ var Rules = {
 	},
 
 	getResistanceStrength: function getResistanceStrength() {
-		return 3;
+		return 5;
 	},
 
 	/* = Leveling up = */
@@ -1239,15 +1239,15 @@ var Rules = {
 	},
 
 	getLevelResistance: function getLevelResistance() {
-		return 2;
+		return 6;
 	},
 
 	getLevelSkill: function getLevelSkill() {
-		return 2;
+		return 6;
 	},
 
 	getLevelStat: function getLevelStat() {
-		return 1.2;
+		return 1.25;
 	}
 
 };
@@ -1508,8 +1508,19 @@ var Shopkeeper = function Shopkeeper(name, items) {
 Shopkeeper.prototype = Object.create(Entity.prototype);
 
 Shopkeeper.create = function (depth) {
-	var def = this.ALL.random();
-	return new this(def.name, def.items);
+	if (ROT.RNG.getUniform() > 0.9) {
+		var all = [];
+		this.ALL.forEach(function (def) {
+			def.items.forEach(function (item) {
+				return all.push(item);
+			});
+		});
+		all = all.randomize();
+		return new this("C.M.O.T. Dibbler", all.slice(0, 3));
+	} else {
+		var def = this.ALL.random();
+		return new this(def.name, def.items);
+	}
 };
 
 Shopkeeper.prototype.getAttacks = function () {
@@ -1879,11 +1890,11 @@ Game.prototype = {
 		var depth = this._level.getDepth();
 		var gold = pc.getStats().gold;
 		var url = encodeURIComponent(location.href);
-		var status = encodeURIComponent("I got to level " + depth + " at Warden's Duty! " + location.href);
+		var status = encodeURIComponent("I got to level " + depth + " at Warden's Duty, \n\t\tcollecting " + gold + " gold pieces! " + location.href);
 
 		var node = this._dom.outro;
 		node.id = "outro";
-		node.innerHTML = "<h1>Game over</h1>\n\t\t\t<p>You are unable to continue your duty. All the vicious\n\t\t\tcritters locked inside cells are too hard to defeat \n\t\t\tand the game is over.</p>\n\n\t\t\t<p>On the other hand, you did a fine job cleaning the \n\t\t\tprison up. Many cells are now free and you managed to descend\n\t\t\tto level <strong>" + depth + "</strong>. You also gathered \n\t\t\t<span style=\"color:" + ROT.Color.toHex(Stats.gold.color) + "\">" + gold + "</span> gold pieces. \n\t\t\tClick the icons below to share your score!</p>\n\t\t\t\n\t\t\t<a class=\"twitter\" href=\"https://twitter.com/home?status=" + status + "\">\n\t\t\t\t<span>t</span>\n\t\t\t\t<br/>Twitter\n\t\t\t</a>\n\n\t\t\t<a class=\"gplus\" href=\"https://plus.google.com/share?url=" + url + "\">\n\t\t\t\t<span>g+</span>\n\t\t\t\t<br/>Google Plus\n\t\t\t</a>\n\t\t\t\n\t\t\t<a class=\"fb\" href=\"https://www.facebook.com/sharer/sharer.php?u={$url}\">\n\t\t\t\t<span>f</span>\n\t\t\t\t<br/>Facebook\n\t\t\t</a>\n\n\t\t\t<p>Press <strong>Enter</strong> to play again! (You will make it further this time...)</p>\n\t\t";
+		node.innerHTML = "<h1>Game over</h1>\n\t\t\t<p>You are unable to continue your duty. All the vicious\n\t\t\tcritters locked inside cells are too hard to defeat \n\t\t\tand the game is over.</p>\n\n\t\t\t<p>On the other hand, you did a fine job cleaning the \n\t\t\tprison up. Many cells are now free and you managed to descend\n\t\t\tto level <strong>" + depth + "</strong>. You also gathered \n\t\t\t<span style=\"color:" + ROT.Color.toHex(Stats.gold.color) + "\">" + gold + "</span> gold pieces. \n\t\t\tClick the icons below to share your score!</p>\n\t\t\t\n\t\t\t<a class=\"twitter\" href=\"https://twitter.com/home?status=" + status + "\">\n\t\t\t\t<span>t</span>\n\t\t\t\t<br/>Twitter\n\t\t\t</a>\n\n\t\t\t<a class=\"gplus\" href=\"https://plus.google.com/share?url=" + url + "\">\n\t\t\t\t<span>g+</span>\n\t\t\t\t<br/>Google Plus\n\t\t\t</a>\n\t\t\t\n\t\t\t<a class=\"fb\" href=\"https://www.facebook.com/sharer/sharer.php?u=" + url + "\">\n\t\t\t\t<span>f</span>\n\t\t\t\t<br/>Facebook\n\t\t\t</a>\n\n\t\t\t<p>Press <strong>Enter</strong> to play again! (You will make it further this time...)</p>\n\t\t";
 		document.body.insertBefore(node, document.body.firstChild);
 	},
 

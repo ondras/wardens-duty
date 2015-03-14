@@ -27,11 +27,12 @@ Game.prototype = {
 	over() {
 		window.addEventListener("keydown", this);
 		this._level.deactivate();
-		
+
 		var depth = this._level.getDepth();
 		var gold = pc.getStats().gold;
 		var url = encodeURIComponent(location.href);
-		var status = encodeURIComponent(`I got to level ${depth} at Warden's Duty! ${location.href}`);
+		var status = encodeURIComponent(`I got to level ${depth} at Warden's Duty, 
+		collecting ${gold} gold pieces! ${location.href}`);
 
 		var node = this._dom.outro;
 		node.id = "outro";
@@ -56,7 +57,7 @@ Game.prototype = {
 				<br/>Google Plus
 			</a>
 			
-			<a class="fb" href="https://www.facebook.com/sharer/sharer.php?u={$url}">
+			<a class="fb" href="https://www.facebook.com/sharer/sharer.php?u=${url}">
 				<span>f</span>
 				<br/>Facebook
 			</a>

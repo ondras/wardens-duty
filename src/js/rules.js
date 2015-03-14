@@ -74,7 +74,7 @@ var Rules = {
 	/* = Elemental stuff = */
 
 	getResistanceGain() {
-		return ROT.RNG.getUniformInt(0, 2);
+		return ROT.RNG.getUniformInt(0, 3);
 	},
 
 	getElementalPenalty() {
@@ -96,7 +96,7 @@ var Rules = {
 	},
 
 	getTrainingCost() {
-		return 10;
+		return 8;
 	},
 
 	getTrainingStrength() {
@@ -112,7 +112,7 @@ var Rules = {
 	},
 	
 	getResistanceStrength() {
-		return 3;
+		return 5;
 	},
 
 	/* = Leveling up = */
@@ -130,15 +130,15 @@ var Rules = {
 	},
 
 	getLevelResistance() {
-		return 2;
+		return 6;
 	},
 
 	getLevelSkill() {
-		return 2;
+		return 6;
 	},
 
 	getLevelStat() {
-		return 1.2;
+		return 1.25;
 	}
 
 }

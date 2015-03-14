@@ -66,7 +66,7 @@
   counter-reset: attack;
   float: left;
   margin-left: 2ch;
-  width: 25ch;
+  width: 26ch;
   /* ul */
 }
 .cell .info .attacks ul {

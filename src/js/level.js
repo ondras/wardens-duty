@@ -314,11 +314,11 @@ Level._createIntro = function(depth) {
 		-- do I really need to explain that in more detail?</p>`;
 	} else if (Rules.isLevelElemental(depth) && !this.data.elementalAnnounced) {
 		this.data.elementalAnnounced = true;
-		intro = `${intro}<p>Some levels have strong elemental attunement. 
+		intro = `${intro}<p>A few levels have strong elemental attunement. 
 		Keep an eye on these prisoners and try to approach them wisely.</p>`;
 	} else if (Rules.isLevelShop(depth) && !this.data.shopAnnounced) {
 		this.data.shopAnnounced = true;
-		intro = `${intro}<p>You would not believe this! Some cells are 
+		intro = `${intro}<p>You would not believe this! A few cells are 
 		occupied by regular shopkeepers who decided to start their 
 		business here. Well, laissez-faire, as they say.</p>`;
 	}
@@ -329,8 +329,8 @@ Level._createIntro = function(depth) {
 	}
 
 	if (Rules.getEntityCount(depth) == 10) {
-		intro = `${intro}<p>These deep prison levels are so crowded that some cells 
-		even contain multiple monsters! Fortunately, you can deal with them
+		intro = `${intro}<p>These deep prison levels are so crowded that a cell 
+		might even contain multiple monsters! Fortunately, you can deal with them
 		one at a time.</p>`
 	}
 	
@@ -384,5 +384,5 @@ Level._ps = [
 	"ranged attacks can save your life",
 	"some treasure chests are trapped",
 	"there is a golden treasure hidden somewhere in the prison",
-	""
+	"He created this game in seven days"
 ].randomize();
