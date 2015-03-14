@@ -41,9 +41,9 @@ var Rules = {
 	},
 
 	getSkillMultiplier(skill) { /* damage/mana reduction based on skill */
-		/* 0 => 1, 100 => 0.5 */
+		/* 0 => 1, 100 ~> 0.3 */
 		skill = Math.min(skill, 100);
-		var frac = skill/200;
+		var frac = skill/140;
 		return (1-frac);
 	},
 
@@ -88,7 +88,7 @@ var Rules = {
 	/* = Shopping stuff = */
 
 	getPotionCost() {
-		return 5;
+		return 4;
 	},
 
 	getPotionStrength() {
@@ -108,7 +108,7 @@ var Rules = {
 	},
 
 	getResistanceCost() {
-		return 5;
+		return 4;
 	},
 	
 	getResistanceStrength() {

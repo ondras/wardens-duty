@@ -1153,9 +1153,9 @@ var Rules = {
 
 	getSkillMultiplier: function getSkillMultiplier(skill) {
 		/* damage/mana reduction based on skill */
-		/* 0 => 1, 100 => 0.5 */
+		/* 0 => 1, 100 ~> 0.3 */
 		skill = Math.min(skill, 100);
-		var frac = skill / 200;
+		var frac = skill / 140;
 		return 1 - frac;
 	},
 
@@ -1200,7 +1200,7 @@ var Rules = {
 	/* = Shopping stuff = */
 
 	getPotionCost: function getPotionCost() {
-		return 5;
+		return 4;
 	},
 
 	getPotionStrength: function getPotionStrength() {
@@ -1220,7 +1220,7 @@ var Rules = {
 	},
 
 	getResistanceCost: function getResistanceCost() {
-		return 5;
+		return 4;
 	},
 
 	getResistanceStrength: function getResistanceStrength() {
