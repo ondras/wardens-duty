@@ -130,15 +130,15 @@ var Rules = {
 	},
 
 	getLevelResistance() {
-		return 6;
+		return 7;
 	},
 
 	getLevelSkill() {
-		return 6;
+		return 7;
 	},
 
 	getLevelStat() {
-		return 1.25;
+		return 1.3;
 	}
 
 }

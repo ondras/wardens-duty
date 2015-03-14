@@ -1239,15 +1239,15 @@ var Rules = {
 	},
 
 	getLevelResistance: function getLevelResistance() {
-		return 6;
+		return 7;
 	},
 
 	getLevelSkill: function getLevelSkill() {
-		return 6;
+		return 7;
 	},
 
 	getLevelStat: function getLevelStat() {
-		return 1.25;
+		return 1.3;
 	}
 
 };
