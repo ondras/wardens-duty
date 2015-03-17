@@ -31,8 +31,7 @@ Game.prototype = {
 		var depth = this._level.getDepth();
 		var gold = pc.getStats().gold;
 		var url = encodeURIComponent(location.href);
-		var status = encodeURIComponent(`I got to level ${depth} at Warden's Duty, 
-		collecting ${gold} gold pieces! ${location.href}`);
+		var status = encodeURIComponent(`I got to level ${depth} at Warden's Duty, collecting ${gold} gold pieces! ${location.href}`);
 
 		var node = this._dom.outro;
 		node.id = "outro";
